@@ -4,7 +4,7 @@ import message from './schemas/message.js';
 
 const connectToDb = async () => {
     try{
-        await mongoose.connect("mongodb://localhost/ChatApp2-messages"), {
+        await mongoose.connect("mongodb://mongo:27017/ChatApp2_messages"), {
             useNewUrlParser: true,
             useUnifiedTopology: true,
         };
