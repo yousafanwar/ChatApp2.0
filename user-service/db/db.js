@@ -1,10 +1,8 @@
 import mongoose from 'mongoose';
-import message from './schemas/message.js';
-
 
 const connectToDb = async () => {
     try {
-        await mongoose.connect("mongodb://mongo:27017/ChatApp2_chat_service"), {
+        await mongoose.connect("mongodb://mongo:27017/ChatApp2_user_service"), {
             useNewUrlParser: true,
             useUnifiedTopology: true,
         };
