@@ -12,6 +12,8 @@ services:
       context: "./chat-service"
     ports:
       - "5000:5000"
+    depends_on:
+      - mongo
 
   mongo:
     image: mongo:6
@@ -25,6 +27,8 @@ services:
       context: "./user-service"
     ports:
       - "5001:5001"
+    depends_on:
+      - mongo
 
   auth-service:
     build:

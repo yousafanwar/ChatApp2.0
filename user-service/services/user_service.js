@@ -1,3 +1,4 @@
+import user from '../db/schemas/user.js';
 
 export const updateIndUser = async (id, image) => {
     const response = await user.updateOne({ _id: id }, { $set: { avatar: image } });

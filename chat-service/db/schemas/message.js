@@ -3,8 +3,9 @@ import mongoose from 'mongoose';
 
 const messageSchema = new mongoose.Schema({
     sender: String,
+    receiver: String,
     text: String,
-    timeStamp: {type: Date, default: Date.now}
+    timeStamp: { type: Date, default: Date.now }
 });
 
 const message = new mongoose.model("message", messageSchema);
