@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import Card from "./CardView";
+import UseProfile from '../hooks/UseProfile';
 
 interface Message {
     sender: string;
@@ -12,48 +13,64 @@ const ChatView = () => {
     const [inputText, setInputText] = useState<string>("");
     const [flag, setFlag] = useState<boolean>(false);
     const [userData, setUserData] = useState<any>("");
+    const profile = UseProfile();
 
     useEffect(() => {
         const fetchData = async () => {
+            console.log(profile?.profile?._id);
+            const obj = {
+                sender: profile?.profile?._id,
+                receiver: "68869977463cce0c1afdb378",
+            };
             try {
-                const response = await fetch(`http://localhost:5000/getAllMessages`);
-                const result: Message[] = await response.json();
+                const response = await fetch(`http://localhost:5000/api/chats/getAllMessages`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(obj)
+                });
+                const result = await response.json();
                 console.log("getAllMessages", result);
-                setData(result);
-                setUserData(localStorage.getItem("userName"));
+                setData(result.payload);
+                setUserData(profile?.profile?.name);
             } catch (error) {
                 console.error(error);
             }
         };
-
         fetchData();
-    }, [flag]);
+    }, [profile.profile, flag]);
 
     const handleText = async () => {
-        const obj = {
-            sender: localStorage.getItem("userName"),
-            text: inputText
-        };
+        console.log(profile?.profile?._id);
+        if (profile) {
+            const obj = {
+                sender: profile?.profile?._id,
+                receiver: "68869977463cce0c1afdb378",
+                text: inputText
+            };
 
-        try {
-            const response = await fetch(`http://localhost:5000/createMessage`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify(obj)
-            });
+            try {
+                const response = await fetch(`http://localhost:5000/api/chats/createNewMessage`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(obj)
+                });
 
-            if (!response.ok) {
-                console.log("Error while creating new record");
+                if (!response.ok) {
+                    console.log("Error while creating new record");
+                }
+
+                const result = await response.json();
+                setFlag(!flag);
+                setInputText("");
+                console.log(result);
+
+            } catch (error) {
+                console.error(error);
             }
-
-            const result = await response.json();
-            setFlag(!flag);
-            setInputText("");
-            console.log(result);
-        } catch (error) {
-            console.error(error);
         }
     };
 
@@ -87,6 +104,7 @@ const ChatView = () => {
                 />
                 <button onClick={handleText}>Send</button>
             </div>
+            {profile?.profile?.name && <h1>Hi {profile?.profile?.name}</h1>}
         </div>
     );
 };

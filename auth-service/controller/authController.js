@@ -40,7 +40,7 @@ const registerNewUser = async (req, res) => {
     try {
         const { name, email, password } = req.body;
         const result = await authService.registerUser(name, email, password);
-        res.status(result.status).send(result.message);
+        res.status(result.status).json(result.message);
     } catch (error) {
         res.status(400).json("Error while creating new user");
     }

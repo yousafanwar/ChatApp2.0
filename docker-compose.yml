@@ -6,6 +6,8 @@ services:
       context: ./front-end
     ports:
       - "5173:5173"
+    networks:
+      - chat-network
 
   chat-service:
     build: 
@@ -14,13 +16,18 @@ services:
       - "5000:5000"
     depends_on:
       - mongo
+    networks:
+      - chat-network
 
   mongo:
     image: mongo:6
     ports:
       - "27017:27017"
     volumes:
-    - mongo-data:/data/db
+      - mongo-data:/data/db
+    networks:
+      - chat-network
+    hostname: "mongo"
 
   user-service:
     build: 
@@ -29,6 +36,8 @@ services:
       - "5001:5001"
     depends_on:
       - mongo
+    networks:
+      - chat-network
 
   auth-service:
     build:
@@ -37,6 +46,11 @@ services:
       - "5002:5002"
     depends_on:
       - mongo
+    networks:
+      - chat-network
 
 volumes:
   mongo-data:
+
+networks:
+  chat-network:

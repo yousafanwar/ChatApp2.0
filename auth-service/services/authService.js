@@ -36,6 +36,7 @@ const login = async (email, password) => {
                     email: findUser.email,
                     name: findUser.name,
                     avatar: findUser.avatar,
+                    myContacts: findUser.myContacts,
                     token
                 }
                 return { success: true, status: 200, message: "jwt signed", payload: userData };
@@ -60,7 +61,6 @@ const registerUser = async (name, email, password) => {
 
         const newUser = await new user({ name, email, password: hash });
         let result = await newUser.save();
-        console.log({ 'email': email, 'existingUser': existingUser, 'hash': hash, 'result': result })
         if (result) return { success: true, status: 200, message: "New user registered" };
     } catch (err) {
         return { success: false, status: 400, message: "Error while creating new user" };
