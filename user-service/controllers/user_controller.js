@@ -24,10 +24,23 @@ export const addToMyContactList = async (req, res) => {
     }
 }
 
+// returns the loggedIn user's myContacts arr
+export const getUserContacts = async (req, res) => {
+    const { id } = req.params;
+    try {
+        const response = await userService.fetchMyContacts(id);
+        res.status(response.status).json(response.payload);
+    } catch (error) {
+        res.status(500).send(error);
+    }
+
+};
+
 const userControl = {
     updateUser,
     getAllContacts,
     addToMyContactList,
+    getUserContacts
 };
 
 export default userControl;

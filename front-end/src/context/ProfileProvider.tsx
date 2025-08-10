@@ -8,6 +8,7 @@ export interface Profile {
     myContacts: Array<string>
     avatar: string
     timeStamp: string
+    token: string
 };
 
 export interface ProfileContextInterface {

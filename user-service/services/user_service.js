@@ -15,9 +15,24 @@ export const addToMyContacts = async (loggedInUserId, _id, email, name) => {
     await user.updateOne({ _id: loggedInUserId }, { $push: { myContacts: _id } });
 }
 
+export const fetchMyContacts = async (_id) => {
+    try {
+        const response = await user.findOne({ _id });
+        const myContactsIds = response.myContacts;
+        let userContacts = await Promise.all(myContactsIds.map(async (ele) => {
+            return await user.findOne({ _id: ele });
+        }))
+        return { success: true, status: 200, message: "myContacts retrieved successfully", payload: userContacts };
+    }
+    catch (error) {
+        return { success: false, status: 500, message: error }
+    }
+};
+
 const userService = {
     updateIndUser,
     getAllUsers,
     addToMyContacts,
+    fetchMyContacts
 };
 export default userService;
