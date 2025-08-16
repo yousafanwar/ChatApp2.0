@@ -22,16 +22,11 @@ const UseProfile = () => {
             } catch (error) {
                 localStorage.removeItem("profile");
             }
-        }
-    }, []);
-
-    useEffect(() => {
-        if (profile) {
-            localStorage.setItem("profile", JSON.stringify(profile));
         } else {
-            localStorage.removeItem("profile");
+            localStorage.setItem("profile", JSON.stringify(profile));
+
         }
-    }, [profile])
+    }, [profile]);
 
     return { profile, setProfile };
 }

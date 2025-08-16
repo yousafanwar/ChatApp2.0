@@ -12,6 +12,7 @@ const ChatView = () => {
   const [data, setData] = useState<Message[] | null>(null);
   const [inputText, setInputText] = useState<string>("");
   const [flag, setFlag] = useState<boolean>(false);
+  const [selectedContactData, setSelectedContactData] = useState<any>("");
   const profile = UseProfile();
 
   useEffect(() => {
@@ -71,11 +72,18 @@ const ChatView = () => {
     }
   };
 
+  const receiveDataFromChild = (dataFromChild: any) => {
+    console.log("receiveDataFromChild", dataFromChild);
+    setSelectedContactData(dataFromChild);
+  };
+  useEffect(() => {
+    console.log("SelectedContactData", selectedContactData)
+  }, [selectedContactData])
+
   return (
     <div className="flex h-screen">
       <section >
-
-        <ContactsTab />
+        <ContactsTab sendData={receiveDataFromChild} />
       </section>
 
       <section>
@@ -95,7 +103,7 @@ const ChatView = () => {
           </div>
 
           {/* Messages */}
-          <>
+          <div className="overflow-y-auto">
             {data && data.map((item, index) => {
               return <div className="flex-1 p-4 space-y-3">
                 <div className={item.sender === profile?.profile?._id ? "flex justify-end" : "flex justify-start"}>
@@ -106,7 +114,7 @@ const ChatView = () => {
                 </div>
               </div>
             })}
-          </>
+          </div>
           {/* Message Input */}
           <div className="p-3 bg-gray-900 border-t border-gray-800 flex gap-3">
             <input

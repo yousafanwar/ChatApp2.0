@@ -22,7 +22,7 @@ const UserContactsProvider = ({ children }: PropsWithChildren) => {
     useEffect(() => {
 
         const fetchUserContacts = async () => {
-            if (userData) {
+            if (userData.profile?._id) {
                 try {
                     const response = await fetch(`http://localhost:5001/api/users/getMyContacts/${userData.profile?._id}`, {
                         headers: {
@@ -44,7 +44,7 @@ const UserContactsProvider = ({ children }: PropsWithChildren) => {
         };
 
         fetchUserContacts();
-    }, [userData?.profile?._id]);
+    }, [userData.profile?._id]);
 
     return (
         <UserContactsContext.Provider value={myContactList}>
