@@ -2,7 +2,7 @@ import { useState, useEffect, createContext } from "react";
 import type { PropsWithChildren } from "react";
 import UseProfile from "../hooks/UseProfile";
 
-export const UserContactsContext = createContext<IContact[] | undefined>(undefined);
+export const UserContactsContext = createContext<IContact[]>([]);
 
 // optional fields will be used in the implementation of of group chats
 export interface IContact {
@@ -16,7 +16,7 @@ export interface IContact {
 
 const UserContactsProvider = ({ children }: PropsWithChildren) => {
 
-    const [myContactList, setMyContactList] = useState<IContact[] | undefined>(undefined);
+    const [myContactList, setMyContactList] = useState<IContact[]>([]);
     const userData = UseProfile();
 
     useEffect(() => {
@@ -30,8 +30,6 @@ const UserContactsProvider = ({ children }: PropsWithChildren) => {
                         }
                     });
                     if (!response.ok) {
-                        //alert("You are not authenticated, please login again");
-                        //window.location.href = '/login';
                         throw Error("Error while fetching myContacts");
                     }
                     const result = await response.json();

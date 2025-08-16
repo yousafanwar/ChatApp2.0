@@ -16,6 +16,7 @@ const ContactsTab = (props: any) => {
   const userData = UseProfile();
   const usersMyContacts = UserContacts();
   const [contacts, setContacts] = useState<IContact[]>([]);
+  const [unfilteredContacts, setUnfilteredContacts] = useState<IContact[]>([]);
   const [myContactList, setMyContactList] = useState<IContact[]>([]);
   const [renderAllUsers, setRenderAllUsers] = useState<boolean>(false);
 
@@ -34,6 +35,18 @@ const ContactsTab = (props: any) => {
     }
   };
 
+  useEffect(() => {   // refreshs the contacts list whenever a new ccontact is added in my contacts
+    const myContactIds = myContactList.map((item) => {
+      return item._id;
+    })
+
+    const filteredResult = unfilteredContacts.filter((item) => {
+      return !myContactIds.includes(item._id);
+    })
+
+    setContacts(filteredResult);
+  }, [myContactList, unfilteredContacts]);
+
   const getContacts = async () => {
 
     if (userData.profile && userData.profile.token)
@@ -44,18 +57,7 @@ const ContactsTab = (props: any) => {
           }
         });
         const result: IContact[] = await response.json();
-
-        const myContactIds = myContactList.map((item) => {
-          return item._id;
-        })
-
-        const filteredResult = result.filter((item) => {
-          return !myContactIds.includes(item._id);
-        })
-
-        setContacts(filteredResult);
-
-        console.log(contacts);
+        setUnfilteredContacts(result);
 
       } catch (error) {
         console.error(error);
@@ -84,7 +86,8 @@ const ContactsTab = (props: any) => {
       if (!response.ok) {
         console.log("Error while updating contact list");
       }
-
+      setMyContactList((prevStat) => { return [...prevStat, e] });
+      setRenderAllUsers(false);
     } catch (error) {
       console.error(error);
     }
