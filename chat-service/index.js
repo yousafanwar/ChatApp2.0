@@ -5,6 +5,8 @@ import router from './routes/routes.js';
 import { Server } from "socket.io";
 import http from 'http';
 import message from './db/schemas/message.js';
+import imageAttachments from './db/schemas/imageMessage.js';
+import videoAttachments from './db/schemas/videoMessage.js';
 
 const app = express();
 app.use(express.json());
@@ -20,20 +22,46 @@ const io = new Server(server, {
         methods: ["GET", "POST"],
         credentials: true,
     },
+    maxHttpBufferSize: 1e8  
 });
 
 io.on('connection', (socket) => {
     console.log('User has been connected', socket.id);
 
     socket.on('message', async (data) => {
-        const { sender, receiver, text } = data;
-        const newMessage = new message({ sender, receiver, text });
-        await newMessage.save();
-        io.emit('message', newMessage);
+        try {
+            const { sender, receiver, text, blob, blobType } = data;
+            const newMessage = new message({ sender, receiver, text });
+            const imageResource = blob && blobType.includes("image") && new imageAttachments({ originalMessageId: newMessage._id, dbBlob: blob });
+            const videoResource = blob && blobType.includes("video") && new videoAttachments({ originalMessageId: newMessage._id, dbBlob: blob });
+            const senderAvatar = await getIndividualUser(sender);
+
+            await Promise.all([
+                newMessage.save(),
+                blob && blobType.includes("image") && imageResource.save(),
+                blob && blobType.includes("video") && videoResource.save(),
+            ])
+
+            const obj = {
+                id: newMessage._id,
+                sender: newMessage.sender,
+                receiver: newMessage.receiver,
+                text: newMessage.text,
+                timeStamp: newMessage.timeStamp,
+                blobFetchedFromDb: blob,
+                blobType,
+                senderAvatar
+            }
+            io.emit('message', obj);
+        } catch (error) {
+            io.emit('message', error);
+        }
     })
 
     socket.on('fetchChat', async (data) => {
         const { sender, receiver } = data;
+        let blobFetchedFromDb = null;
+        let blobType = "";
         const chats = await message.find({
             $or: [
                 { sender, receiver },
@@ -41,13 +69,51 @@ io.on('connection', (socket) => {
             ],
         }).sort({ timeStamp: 1 });
 
-        io.emit('chatHistory', chats);
+        const retrievedChats = await Promise.all(
+            chats.map(async (item) => {
+                const chatImages = await imageAttachments.find({ originalMessageId: item._id });
+                const chatVideos = await videoAttachments.find({ originalMessageId: item._id });
+                const senderAvatar = await getIndividualUser(item.sender);
+                if (chatImages.length > 0) {
+                    blobFetchedFromDb = chatImages[0].dbBlob;
+                    blobType = "image";
+                }
+                if (chatVideos.length > 0) {
+                    blobFetchedFromDb = chatVideos[0].dbBlob;
+                    blobType = "video";
+                }
+
+                const obj = {
+                    _id: item._id,
+                    sender: item.sender,
+                    receiver: item.receiver ? item.receiver : null,
+                    text: item.text,
+                    timeStamp: item.timeStamp,
+                    blobFetchedFromDb,
+                    blobType,
+                    senderAvatar
+                }
+                blobFetchedFromDb = null;
+                blobType = null;
+
+                return obj;
+            })
+        );
+
+        io.emit('chatHistory', retrievedChats);
 
     });
     socket.on('disconnect', () => {
         console.log('user disconneted');
     })
 })
+
+// call user service
+const getIndividualUser = async (id) => {
+    const response = await fetch(`http://user-service:5001/api/users/getIndividualUser/${id}`);
+    if (!response.ok) throw new Error("Service call failed");
+    return response.json();
+};
 
 app.use('/api/chats', router);
 

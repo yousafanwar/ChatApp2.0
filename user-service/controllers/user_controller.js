@@ -36,11 +36,22 @@ export const getUserContacts = async (req, res) => {
 
 };
 
+export const getIndividualUser = async (req, res) => {
+    const { id } = req.params;
+    try {
+        const response = await userService.getIndUser(id);
+        res.status(response.status).json(response.payload);
+    } catch (error) {
+        res.status(500).send(error);
+    }
+};
+
 const userControl = {
     updateUser,
     getAllContacts,
     addToMyContactList,
-    getUserContacts
+    getUserContacts,
+    getIndividualUser
 };
 
 export default userControl;

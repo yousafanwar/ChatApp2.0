@@ -2,17 +2,29 @@ import { useState, useEffect } from 'react';
 import ContactsTab from '../components/ContactsTab';
 import UseProfile from '../hooks/UseProfile';
 import { io } from "socket.io-client";
+import { Dialog, DialogBackdrop, DialogPanel, DialogTitle } from '@headlessui/react';
+import { PlusIcon } from '@heroicons/react/24/solid';
 
 interface Message {
+  _id: string;
   sender: string;
+  receiver: Array<string>; // To be used in the implementation of group chats
   text: string;
   timeStamp: { type: Date };
+  blobFetchedFromDb: any;
+  blobType: string;
+  senderAvatar: any;
 }
 
 const ChatView = () => {
   const [data, setData] = useState<Message[]>([]);
   const [inputText, setInputText] = useState<string>("");
+  const [mediaText, setMediaText] = useState<string>("");
   const [selectedContactData, setSelectedContactData] = useState<any>("");
+  const [receiverSrc, setReceiverSrc] = useState<string>("");
+  const [attachmentSrc, setAttachmentSrc] = useState<any>(null);
+  const [mediaBlob, setmediaBlob] = useState<any>(null); // to be sent to backend
+  const [open, setOpen] = useState(false)
   const profile = UseProfile();
 
   const server = io("http://localhost:5000");
@@ -20,7 +32,6 @@ const ChatView = () => {
   useEffect(() => {
     if (!profile || !selectedContactData) return;
     server.emit('fetchChat', { sender: profile?.profile?._id, receiver: selectedContactData._id });
-    console.log("fetchChat has been triggered");
     const handleChatHistory = (chatHistory: Message[]) => {
       setData(chatHistory);
     };
@@ -44,14 +55,26 @@ const ChatView = () => {
     };
   }, []);
 
-  const handleText = async () => {
-    server.emit('message', { sender: profile?.profile?._id, receiver: selectedContactData._id, text: inputText });
-    setInputText("");
+  const handleNewMessage = async () => {
+    try {
+      if (mediaBlob) {
+        server.emit('message', { sender: profile?.profile?._id, receiver: selectedContactData._id, text: mediaText, blob: mediaBlob, blobType: mediaBlob.type });
+        setmediaBlob(null);
+      } else {
+        server.emit('message', { sender: profile?.profile?._id, receiver: selectedContactData._id, text: inputText });
+      }
+      setInputText("");
+      setMediaText("");
+      setOpen(false);
+    } catch (error) {
+      console.log("Error while sending the new message: ", error);
+    }
+
   };
 
   const receiveDataFromChild = (dataFromChild: any) => {
-    console.log("receiveDataFromChild", dataFromChild);
     setSelectedContactData(dataFromChild);
+    setReceiverSrc(dataFromChild.avatar);
   };
 
   const renderWelcomeMessage = () => {
@@ -69,6 +92,20 @@ const ChatView = () => {
 
     )
   }
+  const handleUpload = (e: any) => {
+    const file = e.target.files[0];
+    const reader = new FileReader();
+
+    reader.onload = () => {
+      const blob = new Blob([reader.result as ArrayBuffer], { type: file.type });
+      setmediaBlob(blob);
+
+      const url = URL.createObjectURL(blob);
+      setAttachmentSrc(url);
+    }
+    reader.readAsArrayBuffer(file);
+    setOpen(true);
+  }
 
   return (
     <div className="flex h-screen">
@@ -85,8 +122,8 @@ const ChatView = () => {
 
             <div className="flex items-center gap-3 px-4 py-3 bg-gray-900 border-b border-gray-800">
               <img
-                src="https://images.unsplash.com/photo-1494790108377-be9c29b29330?ixlib=rb-1.2.1&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80"
-                alt=""
+                src={receiverSrc || "0684456b-aa2b-4631-86f7-93ceaf33303c.jpg"}
+                alt="Avatar"
                 className="w-10 h-10 rounded-full object-cover"
               />
               <div className="flex-1">
@@ -101,6 +138,12 @@ const ChatView = () => {
                 return <div className="flex-1 p-4 space-y-3">
                   <div className={item.sender === profile?.profile?._id ? "flex justify-end" : "flex justify-start"}>
                     <div className={item.sender === profile?.profile?._id ? "bg-green-600 px-4 py-2 rounded-lg max-w-xs" : "bg-gray-800 px-4 py-2 rounded-lg max-w-xs"}>
+                      {item.blobType && item.blobType.includes("image") && <img src={URL.createObjectURL(new Blob([item.blobFetchedFromDb]))} />}
+                      {item.blobType && item.blobType.includes("video") && <video width="320" height="240" controls style={{ borderRadius: "5px" }}>
+                        <source src={URL.createObjectURL(new Blob([item.blobFetchedFromDb]))} type="video/mp4" />
+                        Your browser does not support the video tag.
+                      </video>}
+
                       <p style={{ color: "white" }}>{item.text}</p>
                       <span className="text-xs text-gray-400 block text-right">{index}</span>
                     </div>
@@ -117,11 +160,53 @@ const ChatView = () => {
                 onChange={(e) => setInputText(e.target.value)}
                 value={inputText}
               />
-              <button onClick={handleText} className="bg-green-600 hover:bg-green-500 rounded-full px-4 py-2 text-sm font-medium">
+              <label htmlFor="fileUpload" style={{ color: "white", margin: "1px", cursor: "pointer", height: "25px", width: "25px" }}>
+                <PlusIcon />
+                <input id="fileUpload" type="file" onChange={(e) => { handleUpload(e) }} style={{ display: "none" }} />
+              </label>
+              <button onClick={handleNewMessage} className="bg-green-600 hover:bg-green-500 rounded-full px-4 py-2 text-sm font-medium">
                 Send
               </button>
             </div>
           </div>
+          <Dialog open={open} onClose={setOpen} className="relative z-10">
+            <DialogBackdrop
+              transition
+              className="fixed inset-0 bg-gray-900/50 transition-opacity data-closed:opacity-0 data-enter:duration-300 data-enter:ease-out data-leave:duration-200 data-leave:ease-in"
+            />
+
+            <div className="fixed inset-0 z-10 w-screen overflow-y-auto">
+              <div className="flex min-h-full items-end justify-center p-4 text-center sm:items-center sm:p-0">
+                <DialogPanel
+                  transition
+                  className="relative transform overflow-hidden rounded-lg bg-gray-800 text-left shadow-xl outline -outline-offset-1 outline-white/10 transition-all data-closed:translate-y-4 data-closed:opacity-0 data-enter:duration-300 data-enter:ease-out data-leave:duration-200 data-leave:ease-in sm:my-8 sm:w-full sm:max-w-lg data-closed:sm:translate-y-0 data-closed:sm:scale-95"
+                >
+                  <div className="bg-gray-800 px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
+                    <div className="sm:flex sm:items-start">
+                      <div className="mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left">
+                        <DialogTitle as="h3" className="text-base font-semibold text-white">
+                          Add Attachment
+                        </DialogTitle>
+                        <div className="mt-2">
+                          {mediaBlob && mediaBlob.type.includes("image") && <img src={attachmentSrc} alt="attachment" style={{ width: "500px", height: "auto" }} />}
+                          {mediaBlob && mediaBlob.type.includes("video") && <video width="320" height="240" controls style={{ borderRadius: "5px" }}>
+                            <source src={attachmentSrc} type="video/mp4" />
+                            Your browser does not support the video tag.
+                          </video>}
+                          <div style={{ display: "flex", justifyContent: "center", alignItems: "center" }}>
+                            <input type="text" placeholder="Enter text" value={mediaText} onChange={(e) => { setMediaText(e.target.value) }} className="bg-green-600 hover:bg-green-500 rounded-full px-4 py-2 text-sm font-medium" />
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  <button onClick={handleNewMessage} className="bg-green-600 hover:bg-green-500 rounded-full px-4 py-2 text-sm font-medium">
+                    Send
+                  </button>
+                </DialogPanel>
+              </div>
+            </div>
+          </Dialog>
         </section>
       }
     </div>

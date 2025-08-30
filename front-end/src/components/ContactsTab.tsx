@@ -104,8 +104,8 @@ const ContactsTab = (props: any) => {
               onClick={() => handleContactClick(ele)}
             >
               <img
-                src="https://images.unsplash.com/photo-1494790108377-be9c29b29330?ixlib=rb-1.2.1&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80"
-                alt=""
+                src={ele.avatar || "0684456b-aa2b-4631-86f7-93ceaf33303c.jpg"}
+                alt="avatar"
                 className="w-12 h-12 rounded-full object-cover"
               />
               <div className="flex-1 min-w-0">
@@ -135,8 +135,8 @@ const ContactsTab = (props: any) => {
               onClick={() => { props.sendData(ele) }}
             >
               <img
-                src="https://images.unsplash.com/photo-1494790108377-be9c29b29330?ixlib=rb-1.2.1&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80"
-                alt=""
+                src={ele.avatar || "0684456b-aa2b-4631-86f7-93ceaf33303c.jpg"}
+                alt="Avatar"
                 className="w-12 h-12 rounded-full object-cover"
               />
               <div className="flex-1 min-w-0">

@@ -11,7 +11,7 @@ export const getAllUsers = async (loggesInUser) => {
 }
 
 // add a contact to the myContacts arr
-export const addToMyContacts = async (loggedInUserId, _id, email, name) => {
+export const addToMyContacts = async (loggedInUserId, _id) => {
     await user.updateOne({ _id: loggedInUserId }, { $push: { myContacts: _id } });
 }
 
@@ -29,10 +29,23 @@ export const fetchMyContacts = async (_id) => {
     }
 };
 
+export const getIndUser = async (id) => {
+    try {
+        const userData = await user.findById(id, 'name email avatar').lean();
+        if (!userData) {
+            return { success: false, status: 404, message: "User not found" };
+        }
+        return { success: true, status: 200, message: "user retrieved successfully", payload: userData };
+    } catch (error) {
+        return { success: false, status: 500, message: error }
+    };
+};
+
 const userService = {
     updateIndUser,
     getAllUsers,
     addToMyContacts,
-    fetchMyContacts
+    fetchMyContacts,
+    getIndUser
 };
 export default userService;
