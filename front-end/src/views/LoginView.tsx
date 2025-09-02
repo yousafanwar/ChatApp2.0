@@ -27,7 +27,6 @@ const LoginView = () => {
         return;
       }
       const result = await response.json();
-      console.log("profile?.setProfile", profile?.setProfile, profile)
       if (profile?.setProfile) {
         profile.setProfile(result);
         navigate("/");

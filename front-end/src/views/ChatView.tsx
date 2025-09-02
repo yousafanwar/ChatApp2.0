@@ -107,6 +107,11 @@ const ChatView = () => {
     setOpen(true);
   }
 
+  const handleTimeStamp = (e: any) => {
+    let formated = new Date(e).toLocaleString();;
+    return formated;
+  }
+
   return (
     <div className="flex h-screen">
       <section >
@@ -115,7 +120,6 @@ const ChatView = () => {
 
       {!selectedContactData ? renderWelcomeMessage()
         :
-
         <section>
           <div className="flex flex-col h-screen w-300">
             {/* Chat Header */}
@@ -135,7 +139,7 @@ const ChatView = () => {
             {/* Messages */}
             <div className="overflow-y-auto">
               {data && data.map((item, index) => {
-                return <div className="flex-1 p-4 space-y-3">
+                return <div className="flex-1 p-4 space-y-3" key={index}>
                   <div className={item.sender === profile?.profile?._id ? "flex justify-end" : "flex justify-start"}>
                     <div className={item.sender === profile?.profile?._id ? "bg-green-600 px-4 py-2 rounded-lg max-w-xs" : "bg-gray-800 px-4 py-2 rounded-lg max-w-xs"}>
                       {item.blobType && item.blobType.includes("image") && <img src={URL.createObjectURL(new Blob([item.blobFetchedFromDb]))} />}
@@ -145,7 +149,7 @@ const ChatView = () => {
                       </video>}
 
                       <p style={{ color: "white" }}>{item.text}</p>
-                      <span className="text-xs text-gray-400 block text-right">{index}</span>
+                      <span className="bottom-1 right-2 text-[10px] text-gray-300">{handleTimeStamp(item.timeStamp)}</span>
                     </div>
                   </div>
                 </div>

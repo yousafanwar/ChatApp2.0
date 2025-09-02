@@ -1,6 +1,8 @@
 import { useState, useEffect } from 'react';
 import UseProfile from '../hooks/UseProfile';
 import UserContacts from '../hooks/UserContacts';
+import { Dialog, DialogPanel } from '@headlessui/react';
+import ProfileView from '../views/ProfileView';
 
 interface IContact {
   _id: string,
@@ -19,6 +21,7 @@ const ContactsTab = (props: any) => {
   const [unfilteredContacts, setUnfilteredContacts] = useState<IContact[]>([]);
   const [myContactList, setMyContactList] = useState<IContact[]>([]);
   const [renderAllUsers, setRenderAllUsers] = useState<boolean>(false);
+  const [open, setOpen] = useState(false);
 
 
   useEffect(() => {
@@ -101,6 +104,7 @@ const ContactsTab = (props: any) => {
             return <li
               key={ele._id}
               className="flex items-center gap-4 p-3 hover:bg-gray-800 cursor-pointer transition-colors"
+              style={{ cursor: "pointer" }}
               onClick={() => handleContactClick(ele)}
             >
               <img
@@ -116,7 +120,6 @@ const ContactsTab = (props: any) => {
                 <p className="text-sm text-gray-400 truncate">{ele.email}</p>
               </div>
             </li>
-
           })}
         </ul>
         <div className="p-3 border-t border-gray-800">
@@ -126,7 +129,6 @@ const ContactsTab = (props: any) => {
             View All Contacts
           </button>
         </div>
-
         <ul className="flex-1 overflow-y-auto">
           {myContactList && myContactList.map((ele) => (
             <li
@@ -150,13 +152,28 @@ const ContactsTab = (props: any) => {
           ))}
         </ul>
         <div className="p-3 border-t border-gray-800">
+          {userData && <>
+            <img src={userData.profile?.avatar || "0684456b-aa2b-4631-86f7-93ceaf33303c.jpg"} alt='user profile picture' className="w-12 h-12 rounded-full object-cover" onClick={() => { setOpen(true) }} style={{ cursor: "pointer" }} />
+            <p style={{ color: "white" }}>Hi {userData.profile?.name}</p>
+          </>}
           <button
             onClick={handleLogOut}
+            style={{ cursor: "pointer" }}
             className="w-full py-2 text-white bg-red-600 hover:bg-red-700 transition-colors rounded">
             LOGOUT
           </button>
         </div>
       </div>
+      <Dialog open={open} onClose={setOpen} className="relative z-10">
+        <div className="fixed inset-0 z-10 w-screen overflow-y-auto">
+          <div className="flex min-h-full items-end justify-center p-4 text-center sm:items-center sm:p-0">
+            <DialogPanel transition className="relative transform overflow-hidden rounded-lg bg-gray-800 text-left shadow-xl outline -outline-offset-1 outline-white/10 transition-all data-closed:translate-y-4 data-closed:opacity-0 data-enter:duration-300 data-enter:ease-out data-leave:duration-200 data-leave:ease-in sm:my-8 sm:w-full sm:max-w-lg data-closed:sm:translate-y-0 data-closed:sm:scale-95"
+            >
+              <ProfileView />
+            </DialogPanel>
+          </div>
+        </div>
+      </Dialog>
     </>
   )
 };

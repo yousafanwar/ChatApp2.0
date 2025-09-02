@@ -2,8 +2,8 @@ import userService from "../services/user_service.js";
 
 export const updateUser = async (req, res) => {
     const id = req.params.id;
-    const { image } = req.body;
-    const response = await userService.updateIndUser(id, image);
+    const { avatar, name, email } = req.body;
+    const response = await userService.updateIndUser(id, avatar, name, email);
     res.json(response);
 }
 

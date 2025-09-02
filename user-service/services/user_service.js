@@ -1,7 +1,7 @@
 import user from '../db/schemas/user.js';
 
-export const updateIndUser = async (id, image) => {
-    const response = await user.updateOne({ _id: id }, { $set: { avatar: image } });
+export const updateIndUser = async (id, avatar, name, email) => {
+    const response = await user.updateOne({ _id: id }, { $set: { avatar, name, email } });
     return response;
 }
 
