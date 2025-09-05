@@ -1,4 +1,5 @@
 import user from '../db/schemas/user.js';
+import group from '../db/schemas/group.js';
 
 export const updateIndUser = async (id, avatar, name, email) => {
     const response = await user.updateOne({ _id: id }, { $set: { avatar, name, email } });
@@ -41,11 +42,67 @@ export const getIndUser = async (id) => {
     };
 };
 
+export const createGroup = async (name, members, adminId) => {
+    try {
+        const newGroup = new group({ name, members, adminId });
+        newGroup.save();
+        return { success: true, status: 200, message: "group created successfully", payload: newGroup };
+    } catch (error) {
+        return { success: false, status: 500, message: error }
+    }
+};
+
+const retrieveGroups = async (id) => {
+    try {
+        const response = await group.find({ $or: [{ members: id }, { adminId: id }] });
+        return { success: true, status: 200, message: "groups retrieved successfully", payload: response };
+    }
+    catch (error) {
+        return { success: false, status: 500, message: error }
+    }
+};
+
+export const updateUserGroup = async () => {
+    try {
+        let updatedGroup = await group.findByIdAndUpdate(groupId, { $push: { members: newMember } }, { new: true });
+        if (!updatedGroup) {
+            return { success: false, status: 404, message: 'Could not find the group' };
+        } else {
+            return { success: true, status: 200, message: 'group members updated successfully', payload: updatedGroup };
+        }
+    }
+    catch (error) {
+        return { success: false, status: 500, message: error }
+    }
+};
+
+export const getGroupMembers = async (id) => {
+    try {
+        const allGroupMembers = await group.findOne({ $or: [{ members: id }, { adminId: id }] }, 'members adminId');
+        console.log("allGroupMembers", allGroupMembers);
+        const [chatMemberIds, chatAdminId] = await Promise.all([
+            Promise.all(
+                allGroupMembers.members.map(id => user.findById(id, 'name'))
+            ),
+            user.findById(allGroupMembers.adminId, 'name')
+        ]);
+        const responseObj = { groupMembers: chatMemberIds, groupAdmin: chatAdminId };
+        return { success: true, status: 200, message: 'group members retrieved successfully', payload: responseObj };
+
+    } catch (error) {
+        return { success: false, status: 500, message: error }
+    }
+};
+
 const userService = {
     updateIndUser,
     getAllUsers,
     addToMyContacts,
     fetchMyContacts,
-    getIndUser
+    getIndUser,
+    createGroup,
+    retrieveGroups,
+    updateUserGroup,
+    getGroupMembers
 };
 export default userService;

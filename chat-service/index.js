@@ -30,8 +30,8 @@ io.on('connection', (socket) => {
 
     socket.on('message', async (data) => {
         try {
-            const { sender, receiver, text, blob, blobType } = data;
-            const newMessage = new message({ sender, receiver, text });
+            const { sender, receiver, text, blob, blobType, groupId } = data;
+            const newMessage = new message({ sender, receiver, text, groupId });
             const imageResource = blob && blobType.includes("image") && new imageAttachments({ originalMessageId: newMessage._id, dbBlob: blob });
             const videoResource = blob && blobType.includes("video") && new videoAttachments({ originalMessageId: newMessage._id, dbBlob: blob });
             const senderAvatar = await getIndividualUser(sender);
@@ -49,6 +49,7 @@ io.on('connection', (socket) => {
                 text: newMessage.text,
                 timeStamp: newMessage.timeStamp,
                 blobFetchedFromDb: blob,
+                groupId: newMessage.groupId,
                 blobType,
                 senderAvatar
             }
@@ -59,21 +60,30 @@ io.on('connection', (socket) => {
     })
 
     socket.on('fetchChat', async (data) => {
-        const { sender, receiver } = data;
+        const { sender, receiver, groupId } = data;
         let blobFetchedFromDb = null;
         let blobType = "";
-        const chats = await message.find({
-            $or: [
-                { sender, receiver },
-                { sender: receiver, receiver: sender },
-            ],
-        }).sort({ timeStamp: 1 });
+        let chats = [];
+
+        if (groupId) {
+            chats = await message.find({ groupId });
+        } else {
+            chats = await message.find({
+                $or: [
+                    { sender, receiver },
+                    { sender: receiver, receiver: sender },
+                ],
+                groupId: null
+            }).sort({ timeStamp: 1 });
+        }
 
         const retrievedChats = await Promise.all(
             chats.map(async (item) => {
                 const chatImages = await imageAttachments.find({ originalMessageId: item._id });
                 const chatVideos = await videoAttachments.find({ originalMessageId: item._id });
-                const senderAvatar = await getIndividualUser(item.sender);
+                const senderData = await getIndividualUser(item.sender);
+                const senderAvatar = senderData.avatar;
+                const senderName = senderData.name;
                 if (chatImages.length > 0) {
                     blobFetchedFromDb = chatImages[0].dbBlob;
                     blobType = "image";
@@ -91,7 +101,9 @@ io.on('connection', (socket) => {
                     timeStamp: item.timeStamp,
                     blobFetchedFromDb,
                     blobType,
-                    senderAvatar
+                    senderAvatar,
+                    senderName,
+                    groupId: item.groupId ? item.groupId : null,
                 }
                 blobFetchedFromDb = null;
                 blobType = null;

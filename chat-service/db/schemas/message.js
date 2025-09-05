@@ -3,8 +3,9 @@ import mongoose from 'mongoose';
 
 const messageSchema = new mongoose.Schema({
     sender: String,
-    receiver: String,
+    receiver: [String],
     text: String,
+    groupId: String,
     timeStamp: { type: Date, default: Date.now }
 });
 

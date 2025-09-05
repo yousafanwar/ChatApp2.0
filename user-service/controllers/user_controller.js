@@ -46,12 +46,81 @@ export const getIndividualUser = async (req, res) => {
     }
 };
 
+export const createNewGroup = async (req, res) => {
+    const { name, members, adminId } = req.body;
+    try {
+        const response = await userService.createGroup(name, members, adminId);
+        const obj = {
+            success: response.success,
+            message: response.message,
+            payload: response.payload
+        }
+        res.status(response.status).json(obj);
+    } catch (error) {
+        res.status(500).json({ message: 'Internal server error' })
+    }
+};
+
+// get all groups is user is member of or isAdmin
+export const getGroups = async (req, res) => {
+    const id = req.params.id;
+    try {
+        const response = await userService.retrieveGroups(id);
+        const obj = {
+            success: response.success,
+            message: response.message,
+            payload: response.payload
+        }
+        res.status(response.status).json(obj);
+    }
+    catch (error) {
+        res.status(500).json({ message: 'Internal server error' })
+    }
+};
+
+export const updateGroup = async (req, res) => {
+    const { newMember, groupId } = req.body;
+
+    try {
+        const response = await userService.updateUserGroup(newMember, groupId);
+        const obj = {
+            success: response.success,
+            message: response.message,
+            payload: response.payload
+        }
+        res.status(response.status).json(obj);
+    }
+    catch (error) {
+        res.status(500).send('internal server error');
+    }
+};
+
+// gets every individual of a group
+export const getAllGroupMembers = async (req, res) => {
+    try {
+        const id = req.params.id;
+        const response = await userService.getGroupMembers(id);
+        const obj = {
+            success: response.success,
+            message: response.message,
+            payload: response.payload
+        }
+        res.status(response.status).json(obj);
+    } catch (error) {
+        res.status(500).send("Internal server error");
+    }
+};
+
 const userControl = {
     updateUser,
     getAllContacts,
     addToMyContactList,
     getUserContacts,
-    getIndividualUser
+    getIndividualUser,
+    createNewGroup,
+    getGroups,
+    updateGroup,
+    getAllGroupMembers
 };
 
 export default userControl;

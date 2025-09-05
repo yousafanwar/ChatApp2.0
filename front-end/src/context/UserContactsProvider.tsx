@@ -34,6 +34,7 @@ const UserContactsProvider = ({ children }: PropsWithChildren) => {
                     }
                     const result = await response.json();
                     setMyContactList(result);
+                    await renderAllGroups();
                 }
                 catch (error) {
                     console.error(error);
@@ -43,6 +44,22 @@ const UserContactsProvider = ({ children }: PropsWithChildren) => {
 
         fetchUserContacts();
     }, [userData.profile?._id]);
+
+         const renderAllGroups = async () => {
+        if (userData) {
+            const response = await fetch(`http://localhost:5001/api/users/getGroups/${userData.profile?._id}`);
+            const result = await response.json();
+
+            setMyContactList((prevState) => [...prevState, ...result.payload.map((groupItem: IContact) => ({
+                groupId: groupItem._id,
+                name: groupItem.name,
+                email: groupItem.email,
+                avatar: groupItem.avatar,
+                members: groupItem.members,
+                adminId: groupItem.adminId,
+            }))]);
+        }
+    }
 
     return (
         <UserContactsContext.Provider value={myContactList}>

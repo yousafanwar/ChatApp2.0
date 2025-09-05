@@ -14,6 +14,13 @@ interface Message {
   blobFetchedFromDb: any;
   blobType: string;
   senderAvatar: any;
+  groupId: string;
+  senderName: string;
+}
+
+interface groupMembers {
+  groupAdmin: { _id: string, name: string };
+  groupMembers: { _id: string, name: string }[];
 }
 
 const ChatView = () => {
@@ -24,14 +31,20 @@ const ChatView = () => {
   const [receiverSrc, setReceiverSrc] = useState<string>("");
   const [attachmentSrc, setAttachmentSrc] = useState<any>(null);
   const [mediaBlob, setmediaBlob] = useState<any>(null); // to be sent to backend
-  const [open, setOpen] = useState(false)
+  const [open, setOpen] = useState<boolean>(false);
+  const [groupDialog, setGroupDialog] = useState<boolean>(false);
+  const [members, setMembers] = useState<groupMembers | null>(null);
   const profile = UseProfile();
 
   const server = io("http://localhost:5000");
 
   useEffect(() => {
     if (!profile || !selectedContactData) return;
-    server.emit('fetchChat', { sender: profile?.profile?._id, receiver: selectedContactData._id });
+    if (!selectedContactData.groupId) {
+      server.emit('fetchChat', { sender: profile?.profile?._id, receiver: selectedContactData._id });
+    } else {
+      server.emit('fetchChat', { sender: profile.profile?._id, receiver: selectedContactData.members, groupId: selectedContactData.groupId });
+    }
     const handleChatHistory = (chatHistory: Message[]) => {
       setData(chatHistory);
     };
@@ -58,10 +71,18 @@ const ChatView = () => {
   const handleNewMessage = async () => {
     try {
       if (mediaBlob) {
-        server.emit('message', { sender: profile?.profile?._id, receiver: selectedContactData._id, text: mediaText, blob: mediaBlob, blobType: mediaBlob.type });
+        if (!selectedContactData.groupId) {
+          server.emit('message', { sender: profile?.profile?._id, receiver: selectedContactData._id, text: mediaText, blob: mediaBlob, blobType: mediaBlob.type });
+        } else {
+          server.emit('message', { sender: profile?.profile?._id, receiver: selectedContactData.members, groupId: selectedContactData.groupId, text: inputText, blob: mediaBlob, blobType: mediaBlob.type });
+        }
         setmediaBlob(null);
       } else {
-        server.emit('message', { sender: profile?.profile?._id, receiver: selectedContactData._id, text: inputText });
+        if (!selectedContactData.groupId) {
+          server.emit('message', { sender: profile?.profile?._id, receiver: selectedContactData._id, text: inputText });
+        } else {
+          server.emit('message', { sender: profile?.profile?._id, receiver: selectedContactData.members, groupId: selectedContactData.groupId, text: inputText });
+        }
       }
       setInputText("");
       setMediaText("");
@@ -89,7 +110,6 @@ const ChatView = () => {
           </p>
         </div>
       </div>
-
     )
   }
   const handleUpload = (e: any) => {
@@ -112,6 +132,41 @@ const ChatView = () => {
     return formated;
   }
 
+  const fetchSecondUser = async (userId: string) => {
+    try {
+      if (userId) {
+        const response = await fetch(`http://localhost:5001/api/users/getIndividualUser/${userId}`)
+        const result = await response.json();
+        setReceiverSrc(result);
+      }
+    } catch (error: any) {
+      throw new Error(error);
+    }
+  }
+  useEffect(() => {
+    if (!selectedContactData.adminId) {
+      fetchSecondUser(selectedContactData._id);
+    }
+
+  }, [selectedContactData])
+
+  const fetchAllGroupMembers = async () => {
+    try {
+      const response = await fetch(`http://localhost:5001/api/users/getAllGroupMembers/${profile.profile?._id}`);
+
+      if (!response.ok) {
+        throw new Error("Error while creating new group");
+      } else {
+        const result = await response.json();
+        setMembers(result.payload);
+        setGroupDialog(true);
+      }
+
+    } catch (error) {
+      console.error("Error", error);
+    }
+  }
+
   return (
     <div className="flex h-screen">
       <section >
@@ -124,13 +179,13 @@ const ChatView = () => {
           <div className="flex flex-col h-screen w-300">
             {/* Chat Header */}
 
-            <div className="flex items-center gap-3 px-4 py-3 bg-gray-900 border-b border-gray-800">
-              <img
-                src={receiverSrc || "0684456b-aa2b-4631-86f7-93ceaf33303c.jpg"}
-                alt="Avatar"
-                className="w-10 h-10 rounded-full object-cover"
-              />
-              <div className="flex-1">
+            <div className="flex-1" onClick={fetchAllGroupMembers}>
+              <div className="flex items-center gap-3 px-4 py-3 bg-gray-900 border-b border-gray-800">
+                <img
+                  src={receiverSrc || "0684456b-aa2b-4631-86f7-93ceaf33303c.jpg"}
+                  alt="Avatar"
+                  className="w-10 h-10 rounded-full object-cover"
+                />
                 <p className="font-medium" style={{ color: "white" }}>{selectedContactData.name}</p>
                 <p className="text-xs text-gray-400">Online</p>
               </div>
@@ -148,6 +203,7 @@ const ChatView = () => {
                         Your browser does not support the video tag.
                       </video>}
 
+                      {item.groupId && <p style={{ color: `rgb(${Math.floor(Math.random() * 256)}, ${Math.floor(Math.random() * 256)}, ${Math.floor(Math.random() * 256)})`, fontWeight: "bold", fontSize: "10px" }}>{item.senderName}</p>}
                       <p style={{ color: "white" }}>{item.text}</p>
                       <span className="bottom-1 right-2 text-[10px] text-gray-300">{handleTimeStamp(item.timeStamp)}</span>
                     </div>
@@ -207,6 +263,41 @@ const ChatView = () => {
                   <button onClick={handleNewMessage} className="bg-green-600 hover:bg-green-500 rounded-full px-4 py-2 text-sm font-medium">
                     Send
                   </button>
+                </DialogPanel>
+              </div>
+            </div>
+          </Dialog>
+          <Dialog open={groupDialog} onClose={setGroupDialog} className="relative z-10">
+            <DialogBackdrop
+              transition
+              className="fixed inset-0 bg-gray-900/50 transition-opacity data-closed:opacity-0 data-enter:duration-300 data-enter:ease-out data-leave:duration-200 data-leave:ease-in"
+            />
+
+            <div className="fixed inset-0 z-10 w-screen overflow-y-auto">
+              <div className="flex min-h-full items-end justify-center p-4 text-center sm:items-center sm:p-0">
+                <DialogPanel
+                  transition
+                  className="relative transform overflow-hidden rounded-lg bg-gray-800 text-left shadow-xl outline -outline-offset-1 outline-white/10 transition-all data-closed:translate-y-4 data-closed:opacity-0 data-enter:duration-300 data-enter:ease-out data-leave:duration-200 data-leave:ease-in sm:my-8 sm:w-full sm:max-w-lg data-closed:sm:translate-y-0 data-closed:sm:scale-95"
+                >
+                  <div className="bg-gray-800 px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
+                    <div className="sm:flex sm:items-start">
+                      <div className="mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left">
+                        <DialogTitle as="h3" className="text-base font-semibold text-white">
+                          Group Members
+                        </DialogTitle>
+                        <div className="mt-2" style={{ color: "white" }}>
+                          {members && <p>{members.groupAdmin.name}: Group Admin</p>}
+                          {members && members.groupMembers.map((item) => {
+                            return <>
+                              <ul style={{ listStyle: "none" }}>
+                                <li>{item.name}: Member</li>
+                              </ul>
+                            </>
+                          })}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
                 </DialogPanel>
               </div>
             </div>

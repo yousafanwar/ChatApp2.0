@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import UseProfile from '../hooks/UseProfile';
 import UserContacts from '../hooks/UserContacts';
-import { Dialog, DialogPanel } from '@headlessui/react';
+import { Dialog, DialogPanel, DialogTitle } from '@headlessui/react';
 import ProfileView from '../views/ProfileView';
 
 interface IContact {
@@ -22,7 +22,10 @@ const ContactsTab = (props: any) => {
   const [myContactList, setMyContactList] = useState<IContact[]>([]);
   const [renderAllUsers, setRenderAllUsers] = useState<boolean>(false);
   const [open, setOpen] = useState(false);
-
+  const [groupName, setGroupName] = useState<string>("");
+  const [selectedGroupItem, setSelectedGroupItem] = useState<any[]>([]);
+  const [groupCreationSuccess, setGroupCreationSuccess] = useState<boolean>(false);
+  const [openGroupDialog, setOpenGroupDialog] = useState<boolean>(false);
 
   useEffect(() => {
     if (usersMyContacts) {
@@ -96,6 +99,37 @@ const ContactsTab = (props: any) => {
     }
   }
 
+  const handleGroup = async () => {
+
+    const groupObj = {
+      name: groupName,
+      members: selectedGroupItem,
+      adminId: userData.profile?._id
+    }
+
+    try {
+      const response = await fetch("http://localhost:5001/api/users/createGroup", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify(groupObj)
+      })
+      if (!response.ok) {
+        throw new Error("Error while creating new group");
+      } else {
+        console.log("create new group response", response);
+        setGroupCreationSuccess(true);
+      }
+    } catch (error) {
+      console.error("Error", error);
+    }
+  }
+
+  const closeGroupDialog = () => {
+    setOpenGroupDialog(false);
+  }
+
   return (
     <>
       <div className="w-80 bg-gray-900 border-r border-gray-800 h-screen flex flex-col">
@@ -156,6 +190,7 @@ const ContactsTab = (props: any) => {
             <img src={userData.profile?.avatar || "0684456b-aa2b-4631-86f7-93ceaf33303c.jpg"} alt='user profile picture' className="w-12 h-12 rounded-full object-cover" onClick={() => { setOpen(true) }} style={{ cursor: "pointer" }} />
             <p style={{ color: "white" }}>Hi {userData.profile?.name}</p>
           </>}
+          <button onClick={() => { setOpenGroupDialog(true) }} className="w-full py-2 text-white bg-red-600 hover:bg-red-700 transition-colors rounded">Create a new Group</button>
           <button
             onClick={handleLogOut}
             style={{ cursor: "pointer" }}
@@ -172,6 +207,62 @@ const ContactsTab = (props: any) => {
               <ProfileView />
             </DialogPanel>
           </div>
+        </div>
+      </Dialog>
+      <Dialog open={openGroupDialog} onClose={closeGroupDialog} className="relative z-50">
+        <div className="fixed inset-0 bg-black/50" aria-hidden="true" />
+        <div className="fixed inset-0 flex items-center justify-center p-4">
+          <DialogPanel className="w-full max-w-md rounded-xl bg-white p-6 shadow-lg space-y-4">
+            <DialogTitle className="text-lg font-semibold">
+              Create New Group
+            </DialogTitle>
+            <input
+              type="text"
+              placeholder="Group Name"
+              value={groupName}
+              onChange={(e) => setGroupName(e.target.value)}
+              className="w-full p-2 border border-gray-300 rounded-lg focus:outline-none focus:ring focus:ring-indigo-500"
+            />
+            <h2 className="text-md font-medium">Add members</h2>
+            <div className="w-full max-h-60 overflow-y-auto divide-y divide-gray-200 border rounded-lg">
+              {myContactList && Array.isArray(myContactList) && myContactList.map((item) => (
+                <div
+                  key={item._id}
+                  className="flex items-center justify-between p-2 cursor-pointer hover:bg-gray-100"
+                  onClick={() => setSelectedGroupItem((prevState: any) => selectedGroupItem.includes(item._id) ? selectedGroupItem.filter((i: any) => { return i !== item._id }) : [...prevState, item._id])}
+                >
+                  <div className="flex items-center space-x-3">
+                    <img
+                      src={item.avatar ? item.avatar.toString() : "0684456b-aa2b-4631-86f7-93ceaf33303c.jpg"}
+                      alt="user avatar"
+                      className="w-10 h-10 rounded-full object-cover"
+                    />
+                    <span>{item.name}</span>
+                  </div>
+                  {selectedGroupItem.includes(item._id) && (
+                    <span className="text-green-600 font-bold">✔</span>
+                  )}
+                </div>
+              ))}
+            </div>
+            <button
+              onClick={handleGroup}
+              className="w-full bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700 transition"
+            >
+              Create Group
+            </button>
+            {groupCreationSuccess && (
+              <div className="w-full bg-green-100 text-green-700 p-3 rounded-lg flex flex-col items-center space-y-2">
+                <p>Group created successfully 🎉</p>
+                <button
+                  onClick={closeGroupDialog}
+                  className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition"
+                >
+                  Continue
+                </button>
+              </div>
+            )}
+          </DialogPanel>
         </div>
       </Dialog>
     </>
