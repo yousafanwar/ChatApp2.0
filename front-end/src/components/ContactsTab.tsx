@@ -1,3 +1,4 @@
+import React from "react";
 import { useState, useEffect } from 'react';
 import UseProfile from '../hooks/UseProfile';
 import UserContacts from '../hooks/UserContacts';
@@ -269,4 +270,4 @@ const ContactsTab = (props: any) => {
   )
 };
 
-export default ContactsTab;
+export default React.memo(ContactsTab);

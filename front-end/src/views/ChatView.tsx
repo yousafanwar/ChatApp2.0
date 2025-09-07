@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import ContactsTab from '../components/ContactsTab';
 import UseProfile from '../hooks/UseProfile';
 import { io } from "socket.io-client";
@@ -90,13 +90,12 @@ const ChatView = () => {
     } catch (error) {
       console.log("Error while sending the new message: ", error);
     }
-
   };
 
-  const receiveDataFromChild = (dataFromChild: any) => {
+  const receiveDataFromChild = useCallback((dataFromChild: any) => {
     setSelectedContactData(dataFromChild);
     setReceiverSrc(dataFromChild.avatar);
-  };
+  }, []);
 
   const renderWelcomeMessage = () => {
     return (
@@ -132,24 +131,6 @@ const ChatView = () => {
     return formated;
   }
 
-  const fetchSecondUser = async (userId: string) => {
-    try {
-      if (userId) {
-        const response = await fetch(`http://localhost:5001/api/users/getIndividualUser/${userId}`)
-        const result = await response.json();
-        setReceiverSrc(result);
-      }
-    } catch (error: any) {
-      throw new Error(error);
-    }
-  }
-  useEffect(() => {
-    if (!selectedContactData.adminId) {
-      fetchSecondUser(selectedContactData._id);
-    }
-
-  }, [selectedContactData])
-
   const fetchAllGroupMembers = async () => {
     try {
       const response = await fetch(`http://localhost:5001/api/users/getAllGroupMembers/${profile.profile?._id}`);
@@ -169,7 +150,7 @@ const ChatView = () => {
 
   return (
     <div className="flex h-screen">
-      <section >
+      <section>
         <ContactsTab sendData={receiveDataFromChild} />
       </section>
 
@@ -183,7 +164,7 @@ const ChatView = () => {
               <div className="flex items-center gap-3 px-4 py-3 bg-gray-900 border-b border-gray-800">
                 <img
                   src={receiverSrc || "0684456b-aa2b-4631-86f7-93ceaf33303c.jpg"}
-                  alt="Avatar"
+                  alt="Contact Avatar"
                   className="w-10 h-10 rounded-full object-cover"
                 />
                 <p className="font-medium" style={{ color: "white" }}>{selectedContactData.name}</p>

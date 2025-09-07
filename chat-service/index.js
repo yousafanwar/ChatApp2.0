@@ -34,7 +34,7 @@ io.on('connection', (socket) => {
             const newMessage = new message({ sender, receiver, text, groupId });
             const imageResource = blob && blobType.includes("image") && new imageAttachments({ originalMessageId: newMessage._id, dbBlob: blob });
             const videoResource = blob && blobType.includes("video") && new videoAttachments({ originalMessageId: newMessage._id, dbBlob: blob });
-            const senderAvatar = await getIndividualUser(sender);
+            const senderData = await getIndividualUser(sender);
 
             await Promise.all([
                 newMessage.save(),
@@ -51,7 +51,7 @@ io.on('connection', (socket) => {
                 blobFetchedFromDb: blob,
                 groupId: newMessage.groupId,
                 blobType,
-                senderAvatar
+                senderData: senderData.id
             }
             io.emit('message', obj);
         } catch (error) {
@@ -82,7 +82,6 @@ io.on('connection', (socket) => {
                 const chatImages = await imageAttachments.find({ originalMessageId: item._id });
                 const chatVideos = await videoAttachments.find({ originalMessageId: item._id });
                 const senderData = await getIndividualUser(item.sender);
-                const senderAvatar = senderData.avatar;
                 const senderName = senderData.name;
                 if (chatImages.length > 0) {
                     blobFetchedFromDb = chatImages[0].dbBlob;
@@ -101,7 +100,6 @@ io.on('connection', (socket) => {
                     timeStamp: item.timeStamp,
                     blobFetchedFromDb,
                     blobType,
-                    senderAvatar,
                     senderName,
                     groupId: item.groupId ? item.groupId : null,
                 }
