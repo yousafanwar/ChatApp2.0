@@ -22,7 +22,7 @@ const io = new Server(server, {
         methods: ["GET", "POST"],
         credentials: true,
     },
-    maxHttpBufferSize: 1e8  
+    maxHttpBufferSize: 1e8
 });
 
 io.on('connection', (socket) => {
@@ -49,11 +49,14 @@ io.on('connection', (socket) => {
                 text: newMessage.text,
                 timeStamp: newMessage.timeStamp,
                 blobFetchedFromDb: blob,
-                groupId: newMessage.groupId,
+                groupId: newMessage.groupId || null,
                 blobType,
                 senderData: senderData.id
             }
-            io.emit('message', obj);
+            if (groupId) {
+                io.emit('message', obj);
+            }
+            socket.emit('message', obj);
         } catch (error) {
             io.emit('message', error);
         }
@@ -110,7 +113,7 @@ io.on('connection', (socket) => {
             })
         );
 
-        io.emit('chatHistory', retrievedChats);
+        socket.emit('chatHistory', retrievedChats);
 
     });
     socket.on('disconnect', () => {

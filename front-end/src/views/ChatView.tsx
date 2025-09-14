@@ -1,9 +1,10 @@
 import { useState, useEffect, useCallback } from 'react';
 import ContactsTab from '../components/ContactsTab';
 import UseProfile from '../hooks/UseProfile';
-import { io } from "socket.io-client";
+//import { io } from "socket.io-client";
 import { Dialog, DialogBackdrop, DialogPanel, DialogTitle } from '@headlessui/react';
 import { PlusIcon } from '@heroicons/react/24/solid';
+import socket from '../hooks/UseSocket';
 
 interface Message {
   _id: string;
@@ -34,23 +35,23 @@ const ChatView = () => {
   const [open, setOpen] = useState<boolean>(false);
   const [groupDialog, setGroupDialog] = useState<boolean>(false);
   const [members, setMembers] = useState<groupMembers | null>(null);
+  const [groupContactStyle, setGroupContactStyle] = useState<string>("");
   const profile = UseProfile();
-
-  const server = io("http://localhost:5000");
 
   useEffect(() => {
     if (!profile || !selectedContactData) return;
     if (!selectedContactData.groupId) {
-      server.emit('fetchChat', { sender: profile?.profile?._id, receiver: selectedContactData._id });
+      socket.emit('fetchChat', { sender: profile?.profile?._id, receiver: selectedContactData._id });
     } else {
-      server.emit('fetchChat', { sender: profile.profile?._id, receiver: selectedContactData.members, groupId: selectedContactData.groupId });
+      socket.emit('fetchChat', { sender: profile.profile?._id, receiver: selectedContactData.members, groupId: selectedContactData.groupId || null });
+      setGroupContactStyle(`rgb(${Math.floor(Math.random() * 256)}, ${Math.floor(Math.random() * 256)}, ${Math.floor(Math.random() * 256)})`);
     }
     const handleChatHistory = (chatHistory: Message[]) => {
       setData(chatHistory);
     };
-    server.on('chatHistory', handleChatHistory);
+    socket.on('chatHistory', handleChatHistory);
     return () => {
-      server.off('chatHistory', handleChatHistory);
+      socket.off('chatHistory', handleChatHistory);
     };
 
   }, [selectedContactData])
@@ -61,10 +62,10 @@ const ChatView = () => {
 
       setData((preState) => [...preState, newMessage]);
     }
-    server.on('message', readNewMessage);
+    socket.on('message', readNewMessage);
     setInputText("");
     return () => {
-      server.off('message');
+      socket.off('message');
     };
   }, []);
 
@@ -72,16 +73,16 @@ const ChatView = () => {
     try {
       if (mediaBlob) {
         if (!selectedContactData.groupId) {
-          server.emit('message', { sender: profile?.profile?._id, receiver: selectedContactData._id, text: mediaText, blob: mediaBlob, blobType: mediaBlob.type });
+          socket.emit('message', { sender: profile?.profile?._id, receiver: selectedContactData._id, text: mediaText, blob: mediaBlob, blobType: mediaBlob.type });
         } else {
-          server.emit('message', { sender: profile?.profile?._id, receiver: selectedContactData.members, groupId: selectedContactData.groupId, text: inputText, blob: mediaBlob, blobType: mediaBlob.type });
+          socket.emit('message', { sender: profile?.profile?._id, receiver: selectedContactData.members, groupId: selectedContactData.groupId, text: inputText, blob: mediaBlob, blobType: mediaBlob.type });
         }
         setmediaBlob(null);
       } else {
         if (!selectedContactData.groupId) {
-          server.emit('message', { sender: profile?.profile?._id, receiver: selectedContactData._id, text: inputText });
+          socket.emit('message', { sender: profile?.profile?._id, receiver: selectedContactData._id, text: inputText });
         } else {
-          server.emit('message', { sender: profile?.profile?._id, receiver: selectedContactData.members, groupId: selectedContactData.groupId, text: inputText });
+          socket.emit('message', { sender: profile?.profile?._id, receiver: selectedContactData.members, groupId: selectedContactData.groupId, text: inputText });
         }
       }
       setInputText("");
@@ -184,7 +185,7 @@ const ChatView = () => {
                         Your browser does not support the video tag.
                       </video>}
 
-                      {item.groupId && <p style={{ color: `rgb(${Math.floor(Math.random() * 256)}, ${Math.floor(Math.random() * 256)}, ${Math.floor(Math.random() * 256)})`, fontWeight: "bold", fontSize: "10px" }}>{item.senderName}</p>}
+                      {item.groupId && <p style={{ color: groupContactStyle, fontWeight: "bold", fontSize: "10px" }}>{item.senderName}</p>}
                       <p style={{ color: "white" }}>{item.text}</p>
                       <span className="bottom-1 right-2 text-[10px] text-gray-300">{handleTimeStamp(item.timeStamp)}</span>
                     </div>
