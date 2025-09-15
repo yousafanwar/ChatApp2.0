@@ -1,15 +1,15 @@
 import { useState, useEffect, useCallback } from 'react';
 import ContactsTab from '../components/ContactsTab';
 import UseProfile from '../hooks/UseProfile';
-//import { io } from "socket.io-client";
 import { Dialog, DialogBackdrop, DialogPanel, DialogTitle } from '@headlessui/react';
 import { PlusIcon } from '@heroicons/react/24/solid';
+import { ArrowLeftIcon } from '@heroicons/react/24/solid';
 import socket from '../hooks/UseSocket';
 
 interface Message {
   _id: string;
   sender: string;
-  receiver: Array<string>; // To be used in the implementation of group chats
+  receiver: Array<string>;
   text: string;
   timeStamp: { type: Date };
   blobFetchedFromDb: any;
@@ -133,25 +133,29 @@ const ChatView = () => {
   }
 
   const fetchAllGroupMembers = async () => {
-    try {
-      const response = await fetch(`http://localhost:5001/api/users/getAllGroupMembers/${profile.profile?._id}`);
+    if (selectedContactData.groupId) {
+      try {
+        const response = await fetch(`http://localhost:5001/api/users/getAllGroupMembers/${profile.profile?._id}`);
 
-      if (!response.ok) {
-        throw new Error("Error while creating new group");
-      } else {
-        const result = await response.json();
-        setMembers(result.payload);
-        setGroupDialog(true);
+        if (!response.ok) {
+          throw new Error("Error while creating new group");
+        } else {
+          const result = await response.json();
+          setMembers(result.payload);
+          setGroupDialog(true);
+        }
+
+      } catch (error) {
+        console.error("Error", error);
       }
-
-    } catch (error) {
-      console.error("Error", error);
+    } else {
+      return;
     }
   }
 
   return (
     <div className="flex h-screen">
-      <section>
+      <section className={`w-full fixed md:w-[21%] md:static ${selectedContactData ? "hidden md:block" : "block"}`}>
         <ContactsTab sendData={receiveDataFromChild} />
       </section>
 
@@ -163,6 +167,10 @@ const ChatView = () => {
 
             <div className="flex-1" onClick={fetchAllGroupMembers}>
               <div className="flex items-center gap-3 px-4 py-3 bg-gray-900 border-b border-gray-800">
+                <label htmlFor='backBtn' style={{ color: "white", margin: "1px", cursor: "pointer", height: "25px", width: "25px" }}>
+                  <ArrowLeftIcon />
+                  <button id='backBtn' onClick={() => { setSelectedContactData(null) }}></button>
+                </label>
                 <img
                   src={receiverSrc || "0684456b-aa2b-4631-86f7-93ceaf33303c.jpg"}
                   alt="Contact Avatar"
@@ -177,7 +185,7 @@ const ChatView = () => {
             <div className="overflow-y-auto">
               {data && data.map((item, index) => {
                 return <div className="flex-1 p-4 space-y-3" key={index}>
-                  <div className={item.sender === profile?.profile?._id ? "flex justify-end" : "flex justify-start"}>
+                  <div className={item.sender === profile?.profile?._id ? "md:flex justify-end" : "md:flex justify-start"}>
                     <div className={item.sender === profile?.profile?._id ? "bg-green-600 px-4 py-2 rounded-lg max-w-xs" : "bg-gray-800 px-4 py-2 rounded-lg max-w-xs"}>
                       {item.blobType && item.blobType.includes("image") && <img src={URL.createObjectURL(new Blob([item.blobFetchedFromDb]))} />}
                       {item.blobType && item.blobType.includes("video") && <video width="320" height="240" controls style={{ borderRadius: "5px" }}>
@@ -194,11 +202,11 @@ const ChatView = () => {
               })}
             </div>
             {/* Message Input */}
-            <div className="p-3 bg-gray-900 border-t border-gray-800 flex gap-3">
+            <div className="p-3 bg-gray-900 border-t border-gray-800 flex gap-3 w-[70%] md:w-full">
               <input
                 type="text"
                 placeholder="Type a message"
-                className="flex-1 bg-gray-800 rounded-full px-4 py-2 outline-none text-sm text-white"
+                className="md:flex-1 bg-gray-800 rounded-full px-4 py-2 outline-none text-sm text-white"
                 onChange={(e) => setInputText(e.target.value)}
                 value={inputText}
               />

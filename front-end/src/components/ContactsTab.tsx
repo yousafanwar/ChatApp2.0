@@ -133,7 +133,7 @@ const ContactsTab = (props: any) => {
 
   return (
     <>
-      <div className="w-80 bg-gray-900 border-r border-gray-800 h-screen flex flex-col">
+      <div className="w-full bg-gray-900 border-r border-gray-800 h-screen flex flex-col">
         <ul className="flex-1 overflow-y-auto">
           {renderAllUsers && contacts && contacts.map((ele) => {
             return <li
