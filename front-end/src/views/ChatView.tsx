@@ -1,9 +1,8 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import ContactsTab from '../components/ContactsTab';
 import UseProfile from '../hooks/UseProfile';
 import { Dialog, DialogBackdrop, DialogPanel, DialogTitle } from '@headlessui/react';
-import { PlusIcon } from '@heroicons/react/24/solid';
-import { ArrowLeftIcon } from '@heroicons/react/24/solid';
+import { PlusIcon, ArrowLeftIcon, XMarkIcon } from '@heroicons/react/24/solid';
 import socket from '../hooks/UseSocket';
 
 interface Message {
@@ -36,6 +35,9 @@ const ChatView = () => {
   const [groupDialog, setGroupDialog] = useState<boolean>(false);
   const [members, setMembers] = useState<groupMembers | null>(null);
   const [groupContactStyle, setGroupContactStyle] = useState<string>("");
+  const [imageDialog, setimageDialog] = useState<boolean>(false);
+  const [expandImageBlob, setExpandImageBlob] = useState<Blob | null>(null);
+  const chatContainer = useRef<HTMLDivElement | null>(null);
   const profile = UseProfile();
 
   useEffect(() => {
@@ -61,6 +63,7 @@ const ChatView = () => {
       console.log("new message", newMessage);
 
       setData((preState) => [...preState, newMessage]);
+      chatContainer.current?.scrollIntoView({ behavior: 'smooth' });
     }
     socket.on('message', readNewMessage);
     setInputText("");
@@ -153,6 +156,15 @@ const ChatView = () => {
     }
   }
 
+  const expandImage = (imageBlob: Blob) => {
+    setExpandImageBlob(imageBlob);
+    setimageDialog(true);
+  };
+
+  useEffect(() => {
+    chatContainer.current?.scrollIntoView({ behavior: 'smooth' });
+  }, [selectedContactData]);
+
   return (
     <div className="flex h-screen">
       <section className={`w-full fixed md:w-[21%] md:static ${selectedContactData ? "hidden md:block" : "block"}`}>
@@ -187,7 +199,7 @@ const ChatView = () => {
                 return <div className="flex-1 p-4 space-y-3" key={index}>
                   <div className={item.sender === profile?.profile?._id ? "md:flex justify-end" : "md:flex justify-start"}>
                     <div className={item.sender === profile?.profile?._id ? "bg-green-600 px-4 py-2 rounded-lg max-w-xs" : "bg-gray-800 px-4 py-2 rounded-lg max-w-xs"}>
-                      {item.blobType && item.blobType.includes("image") && <img src={URL.createObjectURL(new Blob([item.blobFetchedFromDb]))} />}
+                      {item.blobType && item.blobType.includes("image") && <img src={URL.createObjectURL(new Blob([item.blobFetchedFromDb]))} onClick={() => expandImage(item.blobFetchedFromDb)} />}
                       {item.blobType && item.blobType.includes("video") && <video width="320" height="240" controls style={{ borderRadius: "5px" }}>
                         <source src={URL.createObjectURL(new Blob([item.blobFetchedFromDb]))} type="video/mp4" />
                         Your browser does not support the video tag.
@@ -198,6 +210,7 @@ const ChatView = () => {
                       <span className="bottom-1 right-2 text-[10px] text-gray-300">{handleTimeStamp(item.timeStamp)}</span>
                     </div>
                   </div>
+                  <div ref={chatContainer}></div>
                 </div>
               })}
             </div>
@@ -284,6 +297,36 @@ const ChatView = () => {
                               </ul>
                             </>
                           })}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </DialogPanel>
+              </div>
+            </div>
+          </Dialog>
+          <Dialog open={imageDialog} onClose={setimageDialog} className="relative z-10">
+
+            <DialogBackdrop
+              transition
+              className="fixed inset-0 bg-gray-900/50 transition-opacity data-closed:opacity-0 data-enter:duration-300 data-enter:ease-out data-leave:duration-200 data-leave:ease-in"
+            />
+
+            <div className="fixed inset-0 z-10 w-screen overflow-y-auto">
+              <div className="flex min-h-full items-end justify-center p-4 text-center sm:items-center sm:p-0">
+                <DialogPanel
+                  transition
+                  className="relative transform overflow-hidden rounded-lg bg-gray-800 text-left shadow-xl outline -outline-offset-1 outline-white/10 transition-all data-closed:translate-y-4 data-closed:opacity-0 data-enter:duration-300 data-enter:ease-out data-leave:duration-200 data-leave:ease-in sm:my-8 sm:w-full sm:max-w-lg data-closed:sm:translate-y-0 data-closed:sm:scale-95"
+                >
+                  <div className="bg-gray-800 px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
+                    <div className='flex justify-end'>
+                      <XMarkIcon onClick={() => setimageDialog(false)} style={{ color: "white", margin: "1px", cursor: "pointer", height: "25px", width: "25px" }} />
+                    </div>
+
+                    <div className="sm:flex sm:items-start">
+                      <div className="mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left">
+                        <div className="mt-2" style={{ color: "white" }}>
+                          {expandImageBlob && <img src={URL.createObjectURL(new Blob([expandImageBlob]))} onClick={() => setimageDialog(true)} />}
                         </div>
                       </div>
                     </div>

@@ -191,10 +191,14 @@ const ContactsTab = (props: any) => {
             <img src={userData.profile?.avatar || "0684456b-aa2b-4631-86f7-93ceaf33303c.jpg"} alt='user profile picture' className="w-12 h-12 rounded-full object-cover" onClick={() => { setOpen(true) }} style={{ cursor: "pointer" }} />
             <p style={{ color: "white" }}>Hi {userData.profile?.name}</p>
           </>}
-          <button onClick={() => { setOpenGroupDialog(true) }} className="w-full py-2 text-white bg-red-600 hover:bg-red-700 transition-colors rounded">Create a new Group</button>
+          <button onClick={() => { setOpenGroupDialog(true) }}
+            className="w-full py-2 text-white bg-red-600 hover:bg-red-700 transition-colors rounded pointer"
+            style={{ cursor: "pointer" }}>
+            Create a new Group
+          </button>
           <button
             onClick={handleLogOut}
-            style={{ cursor: "pointer" }}
+            style={{ cursor: "pointer", marginTop: '5px' }}
             className="w-full py-2 text-white bg-red-600 hover:bg-red-700 transition-colors rounded">
             LOGOUT
           </button>
