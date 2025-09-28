@@ -1,17 +1,11 @@
 import { useState, useEffect } from "react";
 import UseProfile from "../hooks/UseProfile";
 
-// interface UserData {
-//     name: string,
-//     avatar: string
-// }
-
 const ProfileView = () => {
 
   const [name, setName] = useState<string | undefined>("");
   const [email, setEmail] = useState<string | undefined>("");
   const [src, setSrc] = useState<any>(null);
-  // const [successMessage, setSuccessMessage] = useState<boolean>(false);
   const userData = UseProfile();
 
 
@@ -21,11 +15,6 @@ const ProfileView = () => {
       setName(userData.profile?.name);
       setSrc(userData.profile?.avatar);
       setEmail(userData.profile?.email);
-      // setDataObj({
-      //     name: userData.profile?.name,
-      //     avatar: userData.profile?.avatar
-      // })
-
     }
 
   }, [])
@@ -50,7 +39,8 @@ const ProfileView = () => {
       const response = await fetch(`http://localhost:5001/api/users/updateUser/${userData.profile?._id}`, {
         method: 'PUT',
         headers: {
-          'Content-Type': 'application/json'
+          'Content-Type': 'application/json',
+          authorization: `Bearer ${userData.profile?.token}`
         },
         body: JSON.stringify({
           avatar: src,
@@ -77,7 +67,11 @@ const ProfileView = () => {
 
   const getUpdatedUser = async () => {
     try {
-      const response = await fetch(`http://localhost:5001/api/users/getIndividualUser/${userData.profile?._id}`);
+      const response = await fetch(`http://localhost:5001/api/users/getIndividualUser/${userData.profile?._id}`, {
+        headers: {
+          authorization: `Bearer ${userData.profile?.token}`
+        }
+      });
       const result = await response.json();
       userData.setProfile(result);
     } catch (error) {

@@ -3,20 +3,15 @@ import dotenv from "dotenv";
 
 dotenv.config();
 
-const authenticateUser = async (req, res, next) => {
-    const authHeaders = req.headers.authorization;
+const authenticateUser = async (req, res) => {
+    try {
+        const { token } = req.body;
+        const result = await authService.verifyJWT(token);
+        res.json({ success: result.success, status: result.status, message: result.message });
+    } catch (err) {
+        console.log('controller faild: ', err);
 
-    const token = authHeaders && authHeaders.split(" ")[1];
-
-    if (!token) {
-        return res.status(401).json({ error: "Token not provided" });
-    }
-    const result = await authService.verifyJWT(token);
-
-    if (result.success) {
-        next();
-    } else {
-        console.error("auth failed");
+        res.json({ success: false, 'error': err });
     }
 };
 

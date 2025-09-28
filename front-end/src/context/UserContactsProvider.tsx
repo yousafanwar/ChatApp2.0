@@ -1,6 +1,7 @@
 import { useState, useEffect, createContext } from "react";
 import type { PropsWithChildren } from "react";
 import UseProfile from "../hooks/UseProfile";
+import authenticationFailed from "../helperFunctions";
 
 export const UserContactsContext = createContext<IContact[]>([]);
 
@@ -38,6 +39,7 @@ const UserContactsProvider = ({ children }: PropsWithChildren) => {
                 }
                 catch (error) {
                     console.error(error);
+                    authenticationFailed();
                 }
             }
         };
@@ -45,19 +47,28 @@ const UserContactsProvider = ({ children }: PropsWithChildren) => {
         fetchUserContacts();
     }, [userData.profile?._id]);
 
-         const renderAllGroups = async () => {
+    const renderAllGroups = async () => {
         if (userData) {
-            const response = await fetch(`http://localhost:5001/api/users/getGroups/${userData.profile?._id}`);
-            const result = await response.json();
+            try {
+                const response = await fetch(`http://localhost:5001/api/users/getGroups/${userData.profile?._id}`, {
+                    headers: {
+                        authorization: `Bearer ${userData.profile?.token}`
+                    }
+                });
+                const result = await response.json();
 
-            setMyContactList((prevState) => [...prevState, ...result.payload.map((groupItem: IContact) => ({
-                groupId: groupItem._id,
-                name: groupItem.name,
-                email: groupItem.email,
-                avatar: groupItem.avatar,
-                members: groupItem.members,
-                adminId: groupItem.adminId,
-            }))]);
+                setMyContactList((prevState) => [...prevState, ...result.payload.map((groupItem: IContact) => ({
+                    groupId: groupItem._id,
+                    name: groupItem.name,
+                    email: groupItem.email,
+                    avatar: groupItem.avatar,
+                    members: groupItem.members,
+                    adminId: groupItem.adminId,
+                }))]);
+            } catch (error) {
+                console.error(error);
+                authenticationFailed();
+            }
         }
     }
 

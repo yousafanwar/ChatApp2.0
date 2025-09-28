@@ -7,12 +7,12 @@ import dotenv from "dotenv";
 dotenv.config();
 
 const verifyJWT = async (token) => {
-    let verify = promisify(jwt.verify);
     try {
+        let verify = promisify(jwt.verify);
         await verify(token, process.env.privateKey);
         return { success: true, status: 200, message: "JWT verified successfuly", };
     } catch (error) {
-        return { sucess: false, status: 500, message: "Internal server error" };
+        return { success: false, status: 500, message: error };
     }
 }
 

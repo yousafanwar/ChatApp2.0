@@ -43,15 +43,17 @@ const ContactsTab = (props: any) => {
   };
 
   useEffect(() => {   // refreshs the contacts list whenever a new ccontact is added in my contacts
-    const myContactIds = myContactList.map((item) => {
-      return item._id;
-    })
+    if (userData.profile && userData.profile.token) {
+      const myContactIds = myContactList.map((item) => {
+        return item._id;
+      })
 
-    const filteredResult = unfilteredContacts.filter((item) => {
-      return !myContactIds.includes(item._id);
-    })
+      const filteredResult = unfilteredContacts.filter((item) => {
+        return !myContactIds.includes(item._id);
+      })
 
-    setContacts(filteredResult);
+      setContacts(filteredResult);
+    }
   }, [myContactList, unfilteredContacts]);
 
   const getContacts = async () => {
@@ -98,7 +100,7 @@ const ContactsTab = (props: any) => {
     } catch (error) {
       console.error(error);
     }
-  }
+  };
 
   const handleGroup = async () => {
 
@@ -112,7 +114,8 @@ const ContactsTab = (props: any) => {
       const response = await fetch("http://localhost:5001/api/users/createGroup", {
         method: "POST",
         headers: {
-          "Content-Type": "application/json"
+          "Content-Type": "application/json",
+          authorization: `Bearer ${userData.profile?.token}`
         },
         body: JSON.stringify(groupObj)
       })
