@@ -18,6 +18,11 @@ app.use(bodyParser.urlencoded({ limit: '50mb', extended: true }));
 
 app.use('/api/auth', router);
 
+app.use((err, req, res, next) => {
+    console.error('Unhandled error:', err);
+    res.status(500).json({ success: false, message: 'Internal server error' });
+});
+
 app.listen(process.env.port, () => {
   console.log(`App is listening on port ${process.env.port}`);
 });

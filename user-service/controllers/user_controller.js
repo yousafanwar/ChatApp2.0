@@ -1,97 +1,125 @@
 import userService from "../services/user_service.js";
 
 export const updateUser = async (req, res) => {
-    const id = req.params.id;
-    const { avatar, name, email } = req.body;
-    const response = await userService.updateIndUser(id, avatar, name, email);
-    res.json(response);
+    try {
+        const id = req.params.id;
+        const { avatar, name, email } = req.body;
+        const response = await userService.updateIndUser(id, avatar, name, email);
+        if (response.success) {
+            res.status(response.status).json({ success: true, message: response.message, payload: response.payload });
+        } else {
+            res.status(response.status).json({ success: false, message: response.message });
+        }
+    } catch (err) {
+        console.error('Update user error:', err);
+        res.status(500).json({ success: false, message: 'Internal server error' });
+    }
 }
 
 export const getAllContacts = async (req, res) => {
-    const { loggesInUser } = req.params;
-    const response = await userService.getAllUsers(loggesInUser);
-    res.json(response);
+    try {
+        const { loggesInUser } = req.params;
+        const response = await userService.getAllUsers(loggesInUser);
+        if (response.success) {
+            res.status(response.status).json({ success: true, message: response.message, payload: response.payload });
+        } else {
+            res.status(response.status).json({ success: false, message: response.message });
+        }
+    } catch (err) {
+        console.error('Get all contacts error:', err);
+        res.status(500).json({ success: false, message: 'Internal server error' });
+    }
 }
 
 export const addToMyContactList = async (req, res) => {
-    const { loggedInUserId, _id, email, name } = req.body;
     try {
-        await userService.addToMyContacts(loggedInUserId, _id, email, name);
-        res.status(200).json({ response: "Record created successfully" });
-    }
-    catch (error) {
-        res.status(500).send(error);
+        const { loggedInUserId, _id, email, name } = req.body;
+        const result = await userService.addToMyContacts(loggedInUserId, _id, email, name);
+        if (result.success) {
+            res.status(result.status).json({ success: true, message: result.message });
+        } else {
+            res.status(result.status).json({ success: false, message: result.message });
+        }
+    } catch (error) {
+        console.error('Add to contacts error:', error);
+        res.status(500).json({ success: false, message: 'Internal server error' });
     }
 }
 
 // returns the loggedIn user's myContacts arr
 export const getUserContacts = async (req, res) => {
-    const { id } = req.params;
     try {
+        const { id } = req.params;
         const response = await userService.fetchMyContacts(id);
-        res.status(response.status).json(response.payload);
+        if (response.success) {
+            res.status(response.status).json({ success: true, message: response.message, payload: response.payload });
+        } else {
+            res.status(response.status).json({ success: false, message: response.message });
+        }
     } catch (error) {
-        res.status(500).send(error);
+        console.error('Get user contacts error:', error);
+        res.status(500).json({ success: false, message: 'Internal server error' });
     }
-
 };
 
 export const getIndividualUser = async (req, res) => {
-    const { id } = req.params;
     try {
+        const { id } = req.params;
         const response = await userService.getIndUser(id);
-        res.status(response.status).json(response.payload);
+        if (response.success) {
+            res.status(response.status).json({ success: true, message: response.message, payload: response.payload });
+        } else {
+            res.status(response.status).json({ success: false, message: response.message });
+        }
     } catch (error) {
-        res.status(500).send(error);
+        console.error('Get individual user error:', error);
+        res.status(500).json({ success: false, message: 'Internal server error' });
     }
 };
 
 export const createNewGroup = async (req, res) => {
-    const { name, members, adminId } = req.body;
     try {
+        const { name, members, adminId } = req.body;
         const response = await userService.createGroup(name, members, adminId);
-        const obj = {
-            success: response.success,
-            message: response.message,
-            payload: response.payload
+        if (response.success) {
+            res.status(response.status).json({ success: true, message: response.message, payload: response.payload });
+        } else {
+            res.status(response.status).json({ success: false, message: response.message });
         }
-        res.status(response.status).json(obj);
     } catch (error) {
-        res.status(500).json({ message: 'Internal server error' })
+        console.error('Create group error:', error);
+        res.status(500).json({ success: false, message: 'Internal server error' });
     }
 };
 
 // get all groups is user is member of or isAdmin
 export const getGroups = async (req, res) => {
-    const id = req.params.id;
     try {
+        const id = req.params.id;
         const response = await userService.retrieveGroups(id);
-        const obj = {
-            success: response.success,
-            message: response.message,
-            payload: response.payload
+        if (response.success) {
+            res.status(response.status).json({ success: true, message: response.message, payload: response.payload });
+        } else {
+            res.status(response.status).json({ success: false, message: response.message });
         }
-        res.status(response.status).json(obj);
-    }
-    catch (error) {
-        res.status(500).json({ message: 'Internal server error' })
+    } catch (error) {
+        console.error('Get groups error:', error);
+        res.status(500).json({ success: false, message: 'Internal server error' });
     }
 };
 
 export const updateGroup = async (req, res) => {
-    const { newMember, groupId } = req.body;
-
     try {
+        const { newMember, groupId } = req.body;
         const response = await userService.updateUserGroup(newMember, groupId);
-        const obj = {
-            success: response.success,
-            message: response.message,
-            payload: response.payload
+        if (response.success) {
+            res.status(response.status).json({ success: true, message: response.message, payload: response.payload });
+        } else {
+            res.status(response.status).json({ success: false, message: response.message });
         }
-        res.status(response.status).json(obj);
-    }
-    catch (error) {
-        res.status(500).send('internal server error');
+    } catch (error) {
+        console.error('Update group error:', error);
+        res.status(500).json({ success: false, message: 'Internal server error' });
     }
 };
 
@@ -100,14 +128,14 @@ export const getAllGroupMembers = async (req, res) => {
     try {
         const id = req.params.id;
         const response = await userService.getGroupMembers(id);
-        const obj = {
-            success: response.success,
-            message: response.message,
-            payload: response.payload
+        if (response.success) {
+            res.status(response.status).json({ success: true, message: response.message, payload: response.payload });
+        } else {
+            res.status(response.status).json({ success: false, message: response.message });
         }
-        res.status(response.status).json(obj);
     } catch (error) {
-        res.status(500).send("Internal server error");
+        console.error('Get group members error:', error);
+        res.status(500).json({ success: false, message: 'Internal server error' });
     }
 };
 

@@ -130,6 +130,11 @@ const getIndividualUser = async (id) => {
 
 app.use('/api/chats', router);
 
+app.use((err, req, res, next) => {
+    console.error('Unhandled error:', err);
+    res.status(500).json({ success: false, message: 'Internal server error' });
+});
+
 server.listen(5000, function () {
     console.log("app is listing on 5000");
 })

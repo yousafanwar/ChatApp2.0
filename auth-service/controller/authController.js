@@ -7,37 +7,44 @@ const authenticateUser = async (req, res) => {
     try {
         const { token } = req.body;
         const result = await authService.verifyJWT(token);
-        res.json({ success: result.success, status: result.status, message: result.message });
+        if (result.success) {
+            res.status(result.status).json({ success: true, message: result.message });
+        } else {
+            res.status(result.status).json({ success: false, message: result.message });
+        }
     } catch (err) {
-        console.log('controller faild: ', err);
-
-        res.json({ success: false, 'error': err });
+        console.error('Authentication error:', err);
+        res.status(500).json({ success: false, message: 'Internal server error' });
     }
 };
 
 const loginUser = async (req, res) => {
-    const { email, password } = req.body;
     try {
-        let result = await authService.login(email, password);
-        if (!result.success) {
-            console.error(result.message.message);
+        const { email, password } = req.body;
+        const result = await authService.login(email, password);
+        if (result.success) {
+            res.status(result.status).json({ success: true, message: result.message, payload: result.payload });
         } else {
-            res.status(result.status).send(result.payload);
+            res.status(result.status).json({ success: false, message: result.message });
         }
     } catch (err) {
-        console.log(err);
-        res.status(500).send("Internal server error");
+        console.error('Login error:', err);
+        res.status(500).json({ success: false, message: 'Internal server error' });
     }
-
 };
 
 const registerNewUser = async (req, res) => {
     try {
         const { name, email, password } = req.body;
         const result = await authService.registerUser(name, email, password);
-        res.status(result.status).json(result.message);
+        if (result.success) {
+            res.status(result.status).json({ success: true, message: result.message });
+        } else {
+            res.status(result.status).json({ success: false, message: result.message });
+        }
     } catch (error) {
-        res.status(400).json("Error while creating new user");
+        console.error('Registration error:', error);
+        res.status(500).json({ success: false, message: 'Internal server error' });
     }
 }
 

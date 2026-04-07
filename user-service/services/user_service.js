@@ -2,18 +2,35 @@ import user from '../db/schemas/user.js';
 import group from '../db/schemas/group.js';
 
 export const updateIndUser = async (id, avatar, name, email) => {
-    const response = await user.updateOne({ _id: id }, { $set: { avatar, name, email } });
-    return response;
+    try {
+        const response = await user.updateOne({ _id: id }, { $set: { avatar, name, email } });
+        if (response.acknowledged) {
+            return { success: true, status: 200, message: "User updated successfully" };
+        } else {
+            return { success: false, status: 500, message: "Failed to update user" };
+        }
+    } catch (error) {
+        return { success: false, status: 500, message: "Internal server error" };
+    }
 }
 
 export const getAllUsers = async (loggesInUser) => {
-    const response = await user.find({ _id: { $ne: loggesInUser } }).select("_id name email avatar");
-    return response;
+    try {
+        const users = await user.find({ _id: { $ne: loggesInUser } }).select("_id name email avatar");
+        return { success: true, status: 200, message: "Users retrieved successfully", payload: users };
+    } catch (error) {
+        return { success: false, status: 500, message: "Internal server error" };
+    }
 }
 
 // add a contact to the myContacts arr
 export const addToMyContacts = async (loggedInUserId, _id) => {
-    await user.updateOne({ _id: loggedInUserId }, { $push: { myContacts: _id } });
+    try {
+        await user.updateOne({ _id: loggedInUserId }, { $push: { myContacts: _id } });
+        return { success: true, status: 200, message: "Contact added successfully" };
+    } catch (error) {
+        return { success: false, status: 500, message: "Internal server error" };
+    }
 }
 
 export const fetchMyContacts = async (_id) => {
@@ -45,10 +62,10 @@ export const getIndUser = async (id) => {
 export const createGroup = async (name, members, adminId) => {
     try {
         const newGroup = new group({ name, members, adminId });
-        newGroup.save();
+        await newGroup.save();
         return { success: true, status: 200, message: "group created successfully", payload: newGroup };
     } catch (error) {
-        return { success: false, status: 500, message: error }
+        return { success: false, status: 500, message: "Internal server error" };
     }
 };
 
@@ -62,7 +79,7 @@ const retrieveGroups = async (id) => {
     }
 };
 
-export const updateUserGroup = async () => {
+export const updateUserGroup = async (newMember, groupId) => {
     try {
         let updatedGroup = await group.findByIdAndUpdate(groupId, { $push: { members: newMember } }, { new: true });
         if (!updatedGroup) {
@@ -70,9 +87,8 @@ export const updateUserGroup = async () => {
         } else {
             return { success: true, status: 200, message: 'group members updated successfully', payload: updatedGroup };
         }
-    }
-    catch (error) {
-        return { success: false, status: 500, message: error }
+    } catch (error) {
+        return { success: false, status: 500, message: 'Internal server error' };
     }
 };
 
