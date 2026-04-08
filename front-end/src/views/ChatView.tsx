@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
+import toast from 'react-hot-toast';
 import ContactsTab from '../components/ContactsTab';
 import UseProfile from '../hooks/UseProfile';
 import { Dialog, DialogBackdrop, DialogPanel, DialogTitle } from '@headlessui/react';
@@ -144,16 +145,17 @@ const ChatView = () => {
           }
         });
 
-        if (!response.ok) {
-          throw new Error("Error while creating new group");
-        } else {
-          const result = await response.json();
+        const result = await response.json();
+        if (result.success) {
           setMembers(result.payload);
           setGroupDialog(true);
+        } else {
+          toast.error(result.message || "Failed to load group members");
         }
 
       } catch (error) {
         console.error("Error", error);
+        toast.error("An error occurred while loading group members");
       }
     } else {
       return;

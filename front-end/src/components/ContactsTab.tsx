@@ -1,5 +1,6 @@
 import React from "react";
 import { useState, useEffect } from 'react';
+import toast from 'react-hot-toast';
 import UseProfile from '../hooks/UseProfile';
 import UserContacts from '../hooks/UserContacts';
 import { Dialog, DialogPanel, DialogTitle } from '@headlessui/react';
@@ -65,11 +66,15 @@ const ContactsTab = (props: any) => {
             authorization: `Bearer ${userData.profile.token}`
           }
         });
-        const result: IContact[] = await response.json();
-        setUnfilteredContacts(result);
-
+        const result = await response.json();
+        if (result.success) {
+          setUnfilteredContacts(result.payload);
+        } else {
+          toast.error(result.message || "Failed to load contacts");
+        }
       } catch (error) {
         console.error(error);
+        toast.error("An error occurred while loading contacts");
       }
   };
 
@@ -92,13 +97,17 @@ const ContactsTab = (props: any) => {
         },
         body: JSON.stringify(obj)
       });
-      if (!response.ok) {
-        console.log("Error while updating contact list");
+      const result = await response.json();
+      if (result.success) {
+        toast.success(result.message || "Contact added successfully");
+        setMyContactList((prevStat) => { return [...prevStat, e] });
+        setRenderAllUsers(false);
+      } else {
+        toast.error(result.message || "Failed to add contact");
       }
-      setMyContactList((prevStat) => { return [...prevStat, e] });
-      setRenderAllUsers(false);
     } catch (error) {
       console.error(error);
+      toast.error("An error occurred while adding contact");
     }
   };
 
@@ -119,14 +128,18 @@ const ContactsTab = (props: any) => {
         },
         body: JSON.stringify(groupObj)
       })
-      if (!response.ok) {
-        throw new Error("Error while creating new group");
-      } else {
-        console.log("create new group response", response);
+      const result = await response.json();
+      if (result.success) {
+        toast.success(result.message || "Group created successfully");
         setGroupCreationSuccess(true);
+        setOpenGroupDialog(false);
+        // Maybe refresh groups
+      } else {
+        toast.error(result.message || "Failed to create group");
       }
     } catch (error) {
       console.error("Error", error);
+      toast.error("An error occurred while creating group");
     }
   }
 

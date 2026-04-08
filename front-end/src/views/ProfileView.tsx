@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import toast from 'react-hot-toast';
 import UseProfile from "../hooks/UseProfile";
 
 const ProfileView = () => {
@@ -49,19 +50,17 @@ const ProfileView = () => {
         })
       })
 
-      if (!response.ok) {
-        console.log("User update failed");
-      }
       const result = await response.json();
-      console.log(result);
-      if (result.modifiedCount > 0) {
-        // setSuccessMessage(true);
-        console.log("modified successfully");
+      if (result.success) {
+        toast.success(result.message || "Profile updated successfully");
         getUpdatedUser();
+      } else {
+        toast.error(result.message || "Failed to update profile");
       }
     }
     catch (error) {
       console.error(error);
+      toast.error("An error occurred while updating profile");
     }
   }
 
@@ -73,9 +72,14 @@ const ProfileView = () => {
         }
       });
       const result = await response.json();
-      userData.setProfile(result);
+      if (result.success) {
+        userData.setProfile(result.payload);
+      } else {
+        toast.error(result.message || "Failed to refresh profile");
+      }
     } catch (error) {
-      console.log(error);
+      console.error(error);
+      toast.error("An error occurred while refreshing profile");
     }
   }
 

@@ -39,7 +39,7 @@ const login = async (email, password) => {
                     myContacts: findUser.myContacts,
                     token
                 }
-                return { success: true, status: 200, message: "jwt signed", payload: userData };
+                return { success: true, status: 200, message: "Login successful", payload: userData };
             }
         };
     }

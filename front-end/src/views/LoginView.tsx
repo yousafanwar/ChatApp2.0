@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from 'react-router-dom';
+import toast from 'react-hot-toast';
 import useProfile from "../hooks/UseProfile";
 import "../globals.css";
 
@@ -13,7 +14,6 @@ const LoginView = () => {
 
   const handleLogin = async (e: any) => {
     e.preventDefault();
-    console.log('loginerrr');
     try {
       const response = await fetch("http://localhost:5002/api/auth/login", {
         method: 'POST',
@@ -22,19 +22,19 @@ const LoginView = () => {
         },
         body: JSON.stringify({ email, password })
       });
-      if (!response.ok) {
-        console.log("front end Error while login");
-        return;
-      }
       const result = await response.json();
-      if (profile?.setProfile) {
-        profile.setProfile(result);
-        navigate("/");
-        console.log("login user data", result);
+      if (result.success) {
+        toast.success(result.message || "Login successful!");
+        if (profile?.setProfile) {
+          profile.setProfile(result.payload);
+          navigate("/");
+        }
+      } else {
+        toast.error(result.message || "Login failed");
       }
-
     } catch (error) {
       console.error(error);
+      toast.error("An error occurred during login");
     }
   }
 
@@ -68,7 +68,7 @@ const LoginView = () => {
             </div>
 
             <div>
-              <button type="submit" className="flex w-full justify-center rounded-md bg-indigo-500 px-3 py-1.5 text-sm/6 font-semibold text-white hover:bg-indigo-400 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-500">Sign in</button>
+              <button type="submit" className="flex w-full justify-center rounded-md bg-indigo-500 px-3 py-1.5 text-sm/6 font-semibold text-white hover:bg-indigo-400 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-500 cursor-pointer">Sign in</button>
             </div>
           </form>
 

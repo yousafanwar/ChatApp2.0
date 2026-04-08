@@ -1,12 +1,11 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import toast from 'react-hot-toast';
 
 const RegisterUserView = () => {
     const [name, setName] = useState<string>("");
     const [email, setEmail] = useState<string>("");
     const [password, setPassword] = useState<string>("");
-    const [successFlag, setSuccessFlag] = useState<boolean>(false);
-    const [alertMessage, setAlertMessage] = useState<string>("");
     const navigate = useNavigate();
 
     const registerUser = async (e: any) => {
@@ -19,21 +18,19 @@ const RegisterUserView = () => {
                 },
                 body: JSON.stringify({ name, email, password })
             });
-            if (!response.ok) {
-                const err = await response.json();
-                setAlertMessage(err);
-                setSuccessFlag(false);
-                return;
-            }
             const result = await response.json();
-            console.log("register user data", result);
-            setAlertMessage(result);
-            setSuccessFlag(true);
-            setName("");
-            setEmail("");
-            setPassword("");
+            if (result.success) {
+                toast.success(result.message || "Registration successful!");
+                setName("");
+                setEmail("");
+                setPassword("");
+                navigate('/login');
+            } else {
+                toast.error(result.message || "Registration failed");
+            }
         } catch (error) {
             console.error(error);
+            toast.error("An error occurred during registration");
         }
     }
 
@@ -73,11 +70,6 @@ const RegisterUserView = () => {
                             <button type="submit" className="flex w-full justify-center rounded-md bg-indigo-500 px-3 py-1.5 text-sm/6 font-semibold text-white hover:bg-indigo-400 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-500">Register Now</button>
                         </div>
                     </form>
-                    {alertMessage && <>
-                        <div className={successFlag ? "p-4 mb-4 text-sm text-green-800 rounded-lg bg-green-50 dark:bg-gray-800 dark:text-green-400" : "p-4 mb-4 text-sm text-red-800 rounded-lg bg-red-50 dark:bg-gray-800 dark:text-red-400"} role="alert">
-                            <span className="font-medium">{successFlag ? "Success " : "User registration failed! "}</span>
-                            <span className="font-medium">{alertMessage}</span>
-                        </div></>}
                     <p className="mt-10 text-center text-sm/6 text-gray-400">
                         <a onClick={() => { navigate('/login'); }} className="font-semibold text-indigo-400 hover:text-indigo-300">Back to login</a>
                     </p>

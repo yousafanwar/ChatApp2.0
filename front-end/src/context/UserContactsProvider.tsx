@@ -1,5 +1,6 @@
 import { useState, useEffect, createContext } from "react";
 import type { PropsWithChildren } from "react";
+import toast from 'react-hot-toast';
 import UseProfile from "../hooks/UseProfile";
 import authenticationFailed from "../helperFunctions";
 
@@ -30,15 +31,17 @@ const UserContactsProvider = ({ children }: PropsWithChildren) => {
                             authorization: `Bearer ${userData.profile?.token}`
                         }
                     });
-                    if (!response.ok) {
-                        throw Error("Error while fetching myContacts");
-                    }
                     const result = await response.json();
-                    setMyContactList(result);
-                    await renderAllGroups();
+                    if (result.success) {
+                        setMyContactList(result.payload);
+                        await renderAllGroups();
+                    } else {
+                        toast.error(result.message || "Failed to load contacts");
+                    }
                 }
                 catch (error) {
                     console.error(error);
+                    toast.error("An error occurred while loading contacts");
                     authenticationFailed();
                 }
             }
@@ -56,17 +59,21 @@ const UserContactsProvider = ({ children }: PropsWithChildren) => {
                     }
                 });
                 const result = await response.json();
-
-                setMyContactList((prevState) => [...prevState, ...result.payload.map((groupItem: IContact) => ({
-                    groupId: groupItem._id,
-                    name: groupItem.name,
-                    email: groupItem.email,
-                    avatar: groupItem.avatar,
-                    members: groupItem.members,
-                    adminId: groupItem.adminId,
-                }))]);
+                if (result.success) {
+                    setMyContactList((prevState) => [...prevState, ...result.payload.map((groupItem: IContact) => ({
+                        groupId: groupItem._id,
+                        name: groupItem.name,
+                        email: groupItem.email,
+                        avatar: groupItem.avatar,
+                        members: groupItem.members,
+                        adminId: groupItem.adminId,
+                    }))]);
+                } else {
+                    toast.error(result.message || "Failed to load groups");
+                }
             } catch (error) {
                 console.error(error);
+                toast.error("An error occurred while loading groups");
                 authenticationFailed();
             }
         }
