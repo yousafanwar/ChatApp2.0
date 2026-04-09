@@ -7,6 +7,7 @@ import UserContactsProvider from './context/UserContactsProvider';
 import "./globals.css";
 import LoginView from './views/LoginView';
 import RegisterUserView from './views/RegisterUser';
+import ProtectedRoute from './components/ProtectedRoute';
 
 function App() {
 
@@ -50,7 +51,11 @@ function App() {
             }}
           />
           <Routes>
-            <Route path='/' element={<ChatView />} />
+            <Route path='/' element={
+              <ProtectedRoute>
+                <ChatView />
+              </ProtectedRoute>
+            } />
             <Route path='/login' element={<LoginView />} />
             <Route path='/register' element={<RegisterUserView />} />
           </Routes>

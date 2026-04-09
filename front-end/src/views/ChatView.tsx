@@ -42,6 +42,12 @@ const ChatView = () => {
   const profile = UseProfile();
 
   useEffect(() => {
+    const userId = profile?.profile?._id;
+    if (!userId) return;
+    socket.emit('register', userId);
+  }, [profile?.profile?._id]);
+
+  useEffect(() => {
     if (!profile || !selectedContactData) return;
     if (!selectedContactData.groupId) {
       socket.emit('fetchChat', { sender: profile?.profile?._id, receiver: selectedContactData._id });

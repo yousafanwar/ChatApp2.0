@@ -25,12 +25,22 @@ const io = new Server(server, {
     maxHttpBufferSize: 1e8
 });
 
+const connectedUsers = new Map();
+
 io.on('connection', (socket) => {
     console.log('User has been connected', socket.id);
+
+    socket.on('register', (userId) => {
+        if (!userId) return;
+        connectedUsers.set(String(userId), socket.id);
+    });
 
     socket.on('message', async (data) => {
         try {
             const { sender, receiver, text, blob, blobType, groupId } = data;
+            if (sender) {
+                connectedUsers.set(String(sender), socket.id);
+            }
             const newMessage = new message({ sender, receiver, text, groupId });
             const imageResource = blob && blobType.includes("image") && new imageAttachments({ originalMessageId: newMessage._id, dbBlob: blob });
             const videoResource = blob && blobType.includes("video") && new videoAttachments({ originalMessageId: newMessage._id, dbBlob: blob });
@@ -55,8 +65,13 @@ io.on('connection', (socket) => {
             }
             if (groupId) {
                 io.emit('message', obj);
+            } else {
+                const receiverSocketId = connectedUsers.get(String(receiver));
+                if (receiverSocketId && receiverSocketId !== socket.id) {
+                    io.to(receiverSocketId).emit('message', obj);
+                }
+                socket.emit('message', obj);
             }
-            socket.emit('message', obj);
         } catch (error) {
             io.emit('message', error);
         }
@@ -64,6 +79,9 @@ io.on('connection', (socket) => {
 
     socket.on('fetchChat', async (data) => {
         const { sender, receiver, groupId } = data;
+        if (sender) {
+            connectedUsers.set(String(sender), socket.id);
+        }
         let blobFetchedFromDb = null;
         let blobType = "";
         let chats = [];
@@ -117,6 +135,11 @@ io.on('connection', (socket) => {
 
     });
     socket.on('disconnect', () => {
+        for (const [userId, socketId] of connectedUsers.entries()) {
+            if (socketId === socket.id) {
+                connectedUsers.delete(userId);
+            }
+        }
         console.log('user disconneted');
     })
 })
