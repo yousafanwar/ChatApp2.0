@@ -149,12 +149,26 @@ const ContactsTab = (props: any) => {
 
   return (
     <>
-      <div className="w-full bg-gray-900 border-r border-gray-800 h-screen flex flex-col">
-        <ul className="flex-1 overflow-y-auto">
+      <div className="w-full bg-[#0f172a] border-r border-slate-800 h-screen flex flex-col">
+        <div className="px-4 py-4 border-b border-slate-800">
+          <div className="flex items-center justify-between gap-3">
+            <div>
+              <p className="text-lg font-semibold text-white">Chats</p>
+              <p className="text-sm text-slate-400">Dark mode messaging</p>
+            </div>
+            <button
+              onClick={handleAllContacts}
+              className="rounded-full bg-sky-500 px-3 py-2 text-sm font-medium text-slate-950 hover:bg-sky-400 transition"
+            >
+              {renderAllUsers ? 'Hide users' : 'All users'}
+            </button>
+          </div>
+        </div>
+        <ul className="flex-1 overflow-y-auto space-y-1 px-2 py-3">
           {renderAllUsers && contacts && contacts.map((ele) => {
             return <li
               key={ele._id}
-              className="flex items-center gap-4 p-3 hover:bg-gray-800 cursor-pointer transition-colors"
+              className="flex items-center gap-4 p-3 rounded-2xl hover:bg-slate-800 transition-colors cursor-pointer"
               style={{ cursor: "pointer" }}
               onClick={() => handleContactClick(ele)}
             >
@@ -173,18 +187,18 @@ const ContactsTab = (props: any) => {
             </li>
           })}
         </ul>
-        <div className="p-3 border-t border-gray-800">
+        <div className="p-3 border-t border-slate-800">
           <button
             onClick={handleAllContacts}
-            className="w-full py-2 text-white bg-red-600 hover:bg-red-700 transition-colors rounded">
+            className="w-full py-2 text-slate-950 bg-sky-500 hover:bg-sky-400 transition-colors rounded">
             View All Contacts
           </button>
         </div>
-        <ul className="flex-1 overflow-y-auto">
+        <ul className="flex-1 overflow-y-auto space-y-1 px-2 py-3">
           {myContactList && myContactList.map((ele) => (
             <li
               key={ele._id}
-              className="flex items-center gap-4 p-3 hover:bg-gray-800 cursor-pointer transition-colors"
+              className="flex items-center gap-4 p-3 rounded-2xl hover:bg-slate-800 transition-colors cursor-pointer"
               onClick={() => { props.sendData(ele) }}
             >
               <img
@@ -202,20 +216,22 @@ const ContactsTab = (props: any) => {
             </li>
           ))}
         </ul>
-        <div className="p-3 border-t border-gray-800">
+        <div className="p-3 border-t border-slate-800 space-y-3">
           {userData && <>
-            <img src={userData.profile?.avatar || "0684456b-aa2b-4631-86f7-93ceaf33303c.jpg"} alt='user profile picture' className="w-12 h-12 rounded-full object-cover" onClick={() => { setOpen(true) }} style={{ cursor: "pointer" }} />
-            <p style={{ color: "white" }}>Hi {userData.profile?.name}</p>
+            <div className="flex items-center gap-3">
+              <img src={userData.profile?.avatar || "0684456b-aa2b-4631-86f7-93ceaf33303c.jpg"} alt='user profile picture' className="w-12 h-12 rounded-full object-cover" onClick={() => { setOpen(true) }} style={{ cursor: "pointer" }} />
+              <p className="text-white">Hi {userData.profile?.name}</p>
+            </div>
           </>}
           <button onClick={() => { setOpenGroupDialog(true) }}
-            className="w-full py-2 text-white bg-red-600 hover:bg-red-700 transition-colors rounded pointer"
+            className="w-full py-2 text-slate-950 bg-sky-500 hover:bg-sky-400 transition-colors rounded"
             style={{ cursor: "pointer" }}>
             Create a new Group
           </button>
           <button
             onClick={handleLogOut}
-            style={{ cursor: "pointer", marginTop: '5px' }}
-            className="w-full py-2 text-white bg-red-600 hover:bg-red-700 transition-colors rounded">
+            style={{ cursor: "pointer" }}
+            className="w-full py-2 text-white bg-slate-700 hover:bg-slate-600 transition-colors rounded">
             LOGOUT
           </button>
         </div>

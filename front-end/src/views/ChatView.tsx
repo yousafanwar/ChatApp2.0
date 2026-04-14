@@ -35,7 +35,6 @@ const ChatView = () => {
   const [open, setOpen] = useState<boolean>(false);
   const [groupDialog, setGroupDialog] = useState<boolean>(false);
   const [members, setMembers] = useState<groupMembers | null>(null);
-  const [groupContactStyle, setGroupContactStyle] = useState<string>("");
   const [imageDialog, setimageDialog] = useState<boolean>(false);
   const [expandImageBlob, setExpandImageBlob] = useState<Blob | null>(null);
   const chatContainer = useRef<HTMLDivElement | null>(null);
@@ -53,7 +52,6 @@ const ChatView = () => {
       socket.emit('fetchChat', { sender: profile?.profile?._id, receiver: selectedContactData._id });
     } else {
       socket.emit('fetchChat', { sender: profile.profile?._id, receiver: selectedContactData.members, groupId: selectedContactData.groupId || null });
-      setGroupContactStyle(`rgb(${Math.floor(Math.random() * 256)}, ${Math.floor(Math.random() * 256)}, ${Math.floor(Math.random() * 256)})`);
     }
     const handleChatHistory = (chatHistory: Message[]) => {
       setData(chatHistory);
@@ -178,181 +176,193 @@ const ChatView = () => {
   }, [selectedContactData]);
 
   return (
-    <div className="flex h-screen">
-      <section className={`w-full fixed md:w-[21%] md:static ${selectedContactData ? "hidden md:block" : "block"}`}>
-        <ContactsTab sendData={receiveDataFromChild} />
-      </section>
+    <>
+      <div className="min-h-screen bg-slate-950 text-white md:flex">
+        <aside className={`w-full md:w-[320px] ${selectedContactData ? 'hidden md:block' : 'block'}`}>
+          <ContactsTab sendData={receiveDataFromChild} />
+        </aside>
 
-      {!selectedContactData ? renderWelcomeMessage()
-        :
-        <section>
-          <div className="flex flex-col h-screen w-300">
-            {/* Chat Header */}
-
-            <div className="flex-1" onClick={fetchAllGroupMembers}>
-              <div className="flex items-center gap-3 px-4 py-3 bg-gray-900 border-b border-gray-800">
-                <label htmlFor='backBtn' style={{ color: "white", margin: "1px", cursor: "pointer", height: "25px", width: "25px" }}>
-                  <ArrowLeftIcon />
-                  <button id='backBtn' onClick={() => { setSelectedContactData(null) }}></button>
-                </label>
+      <main className="flex-1 flex flex-col min-h-screen">
+        {!selectedContactData ? renderWelcomeMessage()
+          :
+          <section className="flex flex-col h-screen w-full">
+            <div className="flex-none" onClick={fetchAllGroupMembers}>
+              <div className="flex items-center gap-3 px-4 py-4 bg-slate-950 border-b border-slate-800">
+                <button className="md:hidden p-2 rounded-full hover:bg-slate-800 transition" onClick={() => { setSelectedContactData(null) }}>
+                  <ArrowLeftIcon className="h-5 w-5 text-white" />
+                </button>
                 <img
                   src={receiverSrc || "0684456b-aa2b-4631-86f7-93ceaf33303c.jpg"}
                   alt="Contact Avatar"
-                  className="w-10 h-10 rounded-full object-cover"
+                  className="w-12 h-12 rounded-full object-cover"
                 />
-                <p className="font-medium" style={{ color: "white" }}>{selectedContactData.name}</p>
-                <p className="text-xs text-gray-400">Online</p>
+                <div className="min-w-0">
+                  <p className="text-base font-semibold text-white truncate">{selectedContactData.name}</p>
+                  <p className="text-xs text-slate-400">Online</p>
+                </div>
               </div>
             </div>
 
-            {/* Messages */}
-            <div className="overflow-y-auto">
+            <div className="flex-1 overflow-y-auto px-3 py-4 space-y-3">
               {data && data.map((item, index) => {
-                return <div className="flex-1 p-4 space-y-3" key={index}>
-                  <div className={item.sender === profile?.profile?._id ? "md:flex justify-end" : "md:flex justify-start"}>
-                    <div className={item.sender === profile?.profile?._id ? "bg-green-600 px-4 py-2 rounded-lg max-w-xs" : "bg-gray-800 px-4 py-2 rounded-lg max-w-xs"}>
-                      {item.blobType && item.blobType.includes("image") && <img src={URL.createObjectURL(new Blob([item.blobFetchedFromDb]))} onClick={() => expandImage(item.blobFetchedFromDb)} />}
-                      {item.blobType && item.blobType.includes("video") && <video width="320" height="240" controls style={{ borderRadius: "5px" }}>
-                        <source src={URL.createObjectURL(new Blob([item.blobFetchedFromDb]))} type="video/mp4" />
-                        Your browser does not support the video tag.
-                      </video>}
-
-                      {item.groupId && <p style={{ color: groupContactStyle, fontWeight: "bold", fontSize: "10px" }}>{item.senderName}</p>}
-                      <p style={{ color: "white" }}>{item.text}</p>
-                      <span className="bottom-1 right-2 text-[10px] text-gray-300">{handleTimeStamp(item.timeStamp)}</span>
+                const isMine = item.sender === profile?.profile?._id;
+                return (
+                  <div className={`flex ${isMine ? 'justify-end' : 'justify-start'}`} key={index}>
+                    <div className={`rounded-[20px] px-4 py-3 text-sm leading-6 ${isMine ? 'bg-sky-500/95 text-white' : 'bg-slate-800/95 text-slate-100'} max-w-[85%] md:max-w-[70%]`}>
+                      {item.groupId && <p className="text-[11px] text-slate-400 mb-1">{item.senderName}</p>}
+                      {item.blobType && item.blobType.includes("image") && (
+                        <img
+                          src={URL.createObjectURL(new Blob([item.blobFetchedFromDb]))}
+                          onClick={() => expandImage(item.blobFetchedFromDb)}
+                          className="mb-2 w-full max-w-full max-h-[280px] rounded-2xl object-contain cursor-pointer"
+                          alt="message attachment"
+                        />
+                      )}
+                      {item.blobType && item.blobType.includes("video") && (
+                        <video className="mb-2 w-full max-w-full max-h-[280px] rounded-2xl" controls>
+                          <source src={URL.createObjectURL(new Blob([item.blobFetchedFromDb]))} type="video/mp4" />
+                          Your browser does not support the video tag.
+                        </video>
+                      )}
+                      <p className="whitespace-pre-wrap break-words">{item.text}</p>
+                      <span className="block mt-2 text-[11px] text-slate-400">{handleTimeStamp(item.timeStamp)}</span>
                     </div>
                   </div>
-                  <div ref={chatContainer}></div>
-                </div>
+                )
               })}
+              <div ref={chatContainer} />
             </div>
-            {/* Message Input */}
-            <div className="p-3 bg-gray-900 border-t border-gray-800 flex gap-3 w-[70%] md:w-full">
+
+            <div className="p-3 bg-slate-950 border-t border-slate-800 flex flex-col gap-3 md:flex-row md:items-center">
               <input
                 type="text"
                 placeholder="Type a message"
-                className="md:flex-1 bg-gray-800 rounded-full px-4 py-2 outline-none text-sm text-white"
+                className="flex-1 rounded-full bg-slate-900 px-4 py-3 text-sm text-white outline-none focus:ring-2 focus:ring-sky-500"
                 onChange={(e) => setInputText(e.target.value)}
                 value={inputText}
               />
-              <label htmlFor="fileUpload" style={{ color: "white", margin: "1px", cursor: "pointer", height: "25px", width: "25px" }}>
-                <PlusIcon />
-                <input id="fileUpload" type="file" onChange={(e) => { handleUpload(e) }} style={{ display: "none" }} />
-              </label>
-              <button onClick={handleNewMessage} className="bg-green-600 hover:bg-green-500 rounded-full px-4 py-2 text-sm font-medium">
+              <div className="flex items-center gap-2">
+                <label className="p-3 rounded-full bg-slate-900 hover:bg-slate-800 cursor-pointer transition">
+                  <PlusIcon className="h-5 w-5 text-white" />
+                  <input id="fileUpload" type="file" onChange={handleUpload} className="hidden" />
+                </label>
+                <button onClick={handleNewMessage} className="rounded-full bg-sky-500 px-5 py-3 text-sm font-medium text-slate-950 hover:bg-sky-400 transition">
+                  Send
+                </button>
+              </div>
+            </div>
+          </section>
+        }
+      </main>
+    </div>
+
+    <Dialog open={open} onClose={setOpen} className="relative z-10">
+      <DialogBackdrop
+        transition
+        className="fixed inset-0 bg-gray-900/50 transition-opacity data-closed:opacity-0 data-enter:duration-300 data-enter:ease-out data-leave:duration-200 data-leave:ease-in"
+      />
+
+      <div className="fixed inset-0 z-10 w-screen overflow-y-auto">
+        <div className="flex min-h-full items-end justify-center p-4 text-center sm:items-center sm:p-0">
+          <DialogPanel
+            transition
+            className="relative transform overflow-hidden rounded-3xl bg-slate-950 text-left shadow-2xl outline outline-1 outline-white/10 transition-all data-closed:translate-y-4 data-closed:opacity-0 data-enter:duration-300 data-enter:ease-out data-leave:duration-200 data-leave:ease-in sm:my-8 sm:w-full sm:max-w-lg data-closed:sm:translate-y-0 data-closed:sm:scale-95"
+          >
+            <div className="bg-slate-950 px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
+              <div className="sm:flex sm:items-start">
+                <div className="mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left">
+                  <DialogTitle as="h3" className="text-base font-semibold text-white">
+                    Add Attachment
+                  </DialogTitle>
+                  <div className="mt-2">
+                    {mediaBlob && mediaBlob.type.includes("image") && <img src={attachmentSrc} alt="attachment" className="w-full max-w-full rounded-2xl" />}
+                    {mediaBlob && mediaBlob.type.includes("video") && (
+                      <video className="w-full max-w-full rounded-2xl" controls>
+                        <source src={attachmentSrc} type="video/mp4" />
+                        Your browser does not support the video tag.
+                      </video>
+                    )}
+                    <div className="mt-4 flex justify-center">
+                      <input type="text" placeholder="Enter text" value={mediaText} onChange={(e) => { setMediaText(e.target.value) }} className="w-full rounded-full bg-slate-900 px-4 py-2 text-sm text-white focus:outline-none focus:ring-2 focus:ring-sky-500" />
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div className="px-4 pb-4 sm:px-6">
+              <button onClick={handleNewMessage} className="w-full rounded-full bg-sky-500 px-4 py-3 text-sm font-medium text-slate-950 hover:bg-sky-400 transition">
                 Send
               </button>
             </div>
-          </div>
-          <Dialog open={open} onClose={setOpen} className="relative z-10">
-            <DialogBackdrop
-              transition
-              className="fixed inset-0 bg-gray-900/50 transition-opacity data-closed:opacity-0 data-enter:duration-300 data-enter:ease-out data-leave:duration-200 data-leave:ease-in"
-            />
+          </DialogPanel>
+        </div>
+      </div>
+    </Dialog>
+    <Dialog open={groupDialog} onClose={setGroupDialog} className="relative z-10">
+      <DialogBackdrop
+        transition
+        className="fixed inset-0 bg-gray-900/50 transition-opacity data-closed:opacity-0 data-enter:duration-300 data-enter:ease-out data-leave:duration-200 data-leave:ease-in"
+      />
 
-            <div className="fixed inset-0 z-10 w-screen overflow-y-auto">
-              <div className="flex min-h-full items-end justify-center p-4 text-center sm:items-center sm:p-0">
-                <DialogPanel
-                  transition
-                  className="relative transform overflow-hidden rounded-lg bg-gray-800 text-left shadow-xl outline -outline-offset-1 outline-white/10 transition-all data-closed:translate-y-4 data-closed:opacity-0 data-enter:duration-300 data-enter:ease-out data-leave:duration-200 data-leave:ease-in sm:my-8 sm:w-full sm:max-w-lg data-closed:sm:translate-y-0 data-closed:sm:scale-95"
-                >
-                  <div className="bg-gray-800 px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
-                    <div className="sm:flex sm:items-start">
-                      <div className="mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left">
-                        <DialogTitle as="h3" className="text-base font-semibold text-white">
-                          Add Attachment
-                        </DialogTitle>
-                        <div className="mt-2">
-                          {mediaBlob && mediaBlob.type.includes("image") && <img src={attachmentSrc} alt="attachment" style={{ width: "500px", height: "auto" }} />}
-                          {mediaBlob && mediaBlob.type.includes("video") && <video width="320" height="240" controls style={{ borderRadius: "5px" }}>
-                            <source src={attachmentSrc} type="video/mp4" />
-                            Your browser does not support the video tag.
-                          </video>}
-                          <div style={{ display: "flex", justifyContent: "center", alignItems: "center" }}>
-                            <input type="text" placeholder="Enter text" value={mediaText} onChange={(e) => { setMediaText(e.target.value) }} className="bg-green-600 hover:bg-green-500 rounded-full px-4 py-2 text-sm font-medium" />
-                          </div>
-                        </div>
+      <div className="fixed inset-0 z-10 w-screen overflow-y-auto">
+        <div className="flex min-h-full items-end justify-center p-4 text-center sm:items-center sm:p-0">
+          <DialogPanel
+            transition
+            className="relative transform overflow-hidden rounded-3xl bg-slate-950 text-left shadow-2xl outline outline-1 outline-white/10 transition-all data-closed:translate-y-4 data-closed:opacity-0 data-enter:duration-300 data-enter:ease-out data-leave:duration-200 data-leave:ease-in sm:my-8 sm:w-full sm:max-w-lg data-closed:sm:translate-y-0 data-closed:sm:scale-95"
+          >
+            <div className="bg-slate-950 px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
+              <div className="sm:flex sm:items-start">
+                <div className="mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left">
+                  <DialogTitle as="h3" className="text-base font-semibold text-white">
+                    Group Members
+                  </DialogTitle>
+                  <div className="mt-2 text-slate-200">
+                    {members && <p className="mb-2 text-slate-300">{members.groupAdmin.name}: Group Admin</p>}
+                    {members && members.groupMembers.map((item) => (
+                      <div key={item._id} className="text-slate-300">
+                        {item.name}: Member
                       </div>
-                    </div>
+                    ))}
                   </div>
-                  <button onClick={handleNewMessage} className="bg-green-600 hover:bg-green-500 rounded-full px-4 py-2 text-sm font-medium">
-                    Send
-                  </button>
-                </DialogPanel>
+                </div>
               </div>
             </div>
-          </Dialog>
-          <Dialog open={groupDialog} onClose={setGroupDialog} className="relative z-10">
-            <DialogBackdrop
-              transition
-              className="fixed inset-0 bg-gray-900/50 transition-opacity data-closed:opacity-0 data-enter:duration-300 data-enter:ease-out data-leave:duration-200 data-leave:ease-in"
-            />
+          </DialogPanel>
+        </div>
+      </div>
+    </Dialog>
+    <Dialog open={imageDialog} onClose={setimageDialog} className="relative z-10">
 
-            <div className="fixed inset-0 z-10 w-screen overflow-y-auto">
-              <div className="flex min-h-full items-end justify-center p-4 text-center sm:items-center sm:p-0">
-                <DialogPanel
-                  transition
-                  className="relative transform overflow-hidden rounded-lg bg-gray-800 text-left shadow-xl outline -outline-offset-1 outline-white/10 transition-all data-closed:translate-y-4 data-closed:opacity-0 data-enter:duration-300 data-enter:ease-out data-leave:duration-200 data-leave:ease-in sm:my-8 sm:w-full sm:max-w-lg data-closed:sm:translate-y-0 data-closed:sm:scale-95"
-                >
-                  <div className="bg-gray-800 px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
-                    <div className="sm:flex sm:items-start">
-                      <div className="mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left">
-                        <DialogTitle as="h3" className="text-base font-semibold text-white">
-                          Group Members
-                        </DialogTitle>
-                        <div className="mt-2" style={{ color: "white" }}>
-                          {members && <p>{members.groupAdmin.name}: Group Admin</p>}
-                          {members && members.groupMembers.map((item) => {
-                            return <>
-                              <ul style={{ listStyle: "none" }}>
-                                <li>{item.name}: Member</li>
-                              </ul>
-                            </>
-                          })}
-                        </div>
-                      </div>
-                    </div>
+      <DialogBackdrop
+        transition
+        className="fixed inset-0 bg-gray-900/50 transition-opacity data-closed:opacity-0 data-enter:duration-300 data-enter:ease-out data-leave:duration-200 data-leave:ease-in"
+      />
+
+      <div className="fixed inset-0 z-10 w-screen overflow-y-auto">
+        <div className="flex min-h-full items-end justify-center p-4 text-center sm:items-center sm:p-0">
+          <DialogPanel
+            transition
+            className="relative transform overflow-hidden rounded-3xl bg-slate-950 text-left shadow-2xl outline outline-1 outline-white/10 transition-all data-closed:translate-y-4 data-closed:opacity-0 data-enter:duration-300 data-enter:ease-out data-leave:duration-200 data-leave:ease-in sm:my-8 sm:w-full sm:max-w-lg data-closed:sm:translate-y-0 data-closed:sm:scale-95"
+          >
+            <div className="bg-slate-950 px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
+              <div className='flex justify-end'>
+                <XMarkIcon onClick={() => setimageDialog(false)} className="h-6 w-6 text-white cursor-pointer" />
+              </div>
+
+              <div className="sm:flex sm:items-start">
+                <div className="mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left">
+                  <div className="mt-2 text-slate-200">
+                    {expandImageBlob && <img src={URL.createObjectURL(new Blob([expandImageBlob]))} className="w-full max-w-full rounded-3xl object-contain" alt="expanded attachment" />}
                   </div>
-                </DialogPanel>
+                </div>
               </div>
             </div>
-          </Dialog>
-          <Dialog open={imageDialog} onClose={setimageDialog} className="relative z-10">
-
-            <DialogBackdrop
-              transition
-              className="fixed inset-0 bg-gray-900/50 transition-opacity data-closed:opacity-0 data-enter:duration-300 data-enter:ease-out data-leave:duration-200 data-leave:ease-in"
-            />
-
-            <div className="fixed inset-0 z-10 w-screen overflow-y-auto">
-              <div className="flex min-h-full items-end justify-center p-4 text-center sm:items-center sm:p-0">
-                <DialogPanel
-                  transition
-                  className="relative transform overflow-hidden rounded-lg bg-gray-800 text-left shadow-xl outline -outline-offset-1 outline-white/10 transition-all data-closed:translate-y-4 data-closed:opacity-0 data-enter:duration-300 data-enter:ease-out data-leave:duration-200 data-leave:ease-in sm:my-8 sm:w-full sm:max-w-lg data-closed:sm:translate-y-0 data-closed:sm:scale-95"
-                >
-                  <div className="bg-gray-800 px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
-                    <div className='flex justify-end'>
-                      <XMarkIcon onClick={() => setimageDialog(false)} style={{ color: "white", margin: "1px", cursor: "pointer", height: "25px", width: "25px" }} />
-                    </div>
-
-                    <div className="sm:flex sm:items-start">
-                      <div className="mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left">
-                        <div className="mt-2" style={{ color: "white" }}>
-                          {expandImageBlob && <img src={URL.createObjectURL(new Blob([expandImageBlob]))} onClick={() => setimageDialog(true)} />}
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </DialogPanel>
-              </div>
-            </div>
-          </Dialog>
-        </section>
-      }
-    </div>
+          </DialogPanel>
+        </div>
+      </div>
+    </Dialog>
+    </>
   );
-
 };
-
 
 export default ChatView;

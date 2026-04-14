@@ -10,7 +10,7 @@ const app = express();
 
 app.use(express.json());
 app.use(cors({
-  origin: 'http://localhost:5173',
+  origin: ['http://localhost:5173', 'https://295vmfn5-5173.asse.devtunnels.ms'],
   credentials: true
 }));
 app.use(bodyParser.json({ limit: '50mb' }));
