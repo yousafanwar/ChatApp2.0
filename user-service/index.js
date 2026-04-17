@@ -5,9 +5,10 @@ import mongoose from './db/db.js';
 import router from './routes/routes.js';
 
 const app = express();
+const allowedOrigins = process.env.ALLOWED_ORIGINS?.split(',') || true;
 
 app.use(cors({
-  origin: ['http://localhost:5173', 'https://295vmfn5-5173.asse.devtunnels.ms'],
+  origin: allowedOrigins,
   credentials: true
 }));
 app.use(bodyParser.json({ limit: '50mb' }));
@@ -20,6 +21,7 @@ app.use((err, req, res, next) => {
     res.status(500).json({ success: false, message: 'Internal server error' });
 });
 
-app.listen(5001, () => {
+const port = process.env.PORT || process.env.port || 5001;
+app.listen(port, () => {
   console.log("App is listening on port 5001");
 });

@@ -9,8 +9,9 @@ dotenv.config();
 const app = express();
 
 app.use(express.json());
+const allowedOrigins = process.env.ALLOWED_ORIGINS?.split(',') || true;
 app.use(cors({
-  origin: ['http://localhost:5173', 'https://295vmfn5-5173.asse.devtunnels.ms'],
+  origin: allowedOrigins,
   credentials: true
 }));
 app.use(bodyParser.json({ limit: '50mb' }));
@@ -23,6 +24,7 @@ app.use((err, req, res, next) => {
     res.status(500).json({ success: false, message: 'Internal server error' });
 });
 
-app.listen(process.env.port, () => {
-  console.log(`App is listening on port ${process.env.port}`);
+const port = process.env.PORT || process.env.port || 5002;
+app.listen(port, () => {
+  console.log(`App is listening on port ${port}`);
 });

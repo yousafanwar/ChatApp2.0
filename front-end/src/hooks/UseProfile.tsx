@@ -19,7 +19,7 @@ const UseProfile = () => {
                     const parsedProfile: Profile | undefined = JSON.parse(user);
                     if (parsedProfile?.token) {
                         // Validate token
-                        fetch("http://localhost:5000/api/auth/authenticate", {
+                        fetch("/api/auth/authenticate", {
                             method: "POST",
                             headers: {
                                 "Content-Type": "application/json",

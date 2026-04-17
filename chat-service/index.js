@@ -10,15 +10,16 @@ import videoAttachments from './db/schemas/videoMessage.js';
 
 const app = express();
 app.use(express.json());
+const allowedOrigins = process.env.ALLOWED_ORIGINS?.split(',') || true;
 app.use(cors({
-    origin: ['http://localhost:5173', 'https://295vmfn5-5173.asse.devtunnels.ms'], 
+    origin: allowedOrigins,
     credentials: true
 }));
 
 const server = http.createServer(app);
 const io = new Server(server, {
     cors: {
-        origin: ['http://localhost:5173', 'https://295vmfn5-5173.asse.devtunnels.ms'],
+        origin: allowedOrigins,
         methods: ["GET", "POST"],
         credentials: true,
     },

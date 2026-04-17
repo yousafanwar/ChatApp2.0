@@ -37,7 +37,7 @@ const ProfileView = () => {
 
   const updateUser = async () => {
     try {
-      const response = await fetch(`http://localhost:5001/api/users/updateUser/${userData.profile?._id}`, {
+      const response = await fetch(`/api/users/updateUser/${userData.profile?._id}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -66,7 +66,7 @@ const ProfileView = () => {
 
   const getUpdatedUser = async () => {
     try {
-      const response = await fetch(`http://localhost:5001/api/users/getIndividualUser/${userData.profile?._id}`, {
+      const response = await fetch(`/api/users/getIndividualUser/${userData.profile?._id}`, {
         headers: {
           authorization: `Bearer ${userData.profile?.token}`
         }
