@@ -61,7 +61,7 @@ const ContactsTab = (props: any) => {
 
     if (userData.profile && userData.profile.token)
       try {
-        const response = await fetch(`http://localhost:5001/api/users/getAllUsers/${userData.profile._id}`, {
+        const response = await fetch(`/api/users/getAllUsers/${userData.profile._id}`, {
           headers: {
             authorization: `Bearer ${userData.profile.token}`
           }
@@ -89,7 +89,7 @@ const ContactsTab = (props: any) => {
       _id: e._id,
     }
     try {
-      const response = await fetch("http://localhost:5001/api/users/addToMyContactList", {
+      const response = await fetch("/api/users/addToMyContactList", {
         method: "POST",
         headers: {
           'Content-Type': 'application/json',
@@ -120,7 +120,7 @@ const ContactsTab = (props: any) => {
     }
 
     try {
-      const response = await fetch("http://localhost:5001/api/users/createGroup", {
+      const response = await fetch("/api/users/createGroup", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

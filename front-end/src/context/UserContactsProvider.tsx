@@ -26,7 +26,7 @@ const UserContactsProvider = ({ children }: PropsWithChildren) => {
         const fetchUserContacts = async () => {
             if (userData.profile?._id) {
                 try {
-                    const response = await fetch(`http://localhost:5001/api/users/getMyContacts/${userData.profile?._id}`, {
+                    const response = await fetch(`/api/users/getMyContacts/${userData.profile?._id}`, {
                         headers: {
                             authorization: `Bearer ${userData.profile?.token}`
                         }
@@ -53,7 +53,7 @@ const UserContactsProvider = ({ children }: PropsWithChildren) => {
     const renderAllGroups = async () => {
         if (userData) {
             try {
-                const response = await fetch(`http://localhost:5001/api/users/getGroups/${userData.profile?._id}`, {
+                const response = await fetch(`/api/users/getGroups/${userData.profile?._id}`, {
                     headers: {
                         authorization: `Bearer ${userData.profile?.token}`
                     }

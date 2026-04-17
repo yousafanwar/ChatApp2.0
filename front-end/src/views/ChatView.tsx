@@ -143,7 +143,7 @@ const ChatView = () => {
   const fetchAllGroupMembers = async () => {
     if (selectedContactData.groupId) {
       try {
-        const response = await fetch(`http://localhost:5001/api/users/getAllGroupMembers/${profile.profile?._id}`, {
+        const response = await fetch(`/api/users/getAllGroupMembers/${profile.profile?._id}`, {
           headers: {
             authorization: `Bearer ${profile.profile?.token}`
           }
