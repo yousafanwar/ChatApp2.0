@@ -1,3 +1,6 @@
+import dotenv from 'dotenv';
+dotenv.config();
+
 import express from 'express';
 import cors from 'cors';
 import mongoose from './db/db.js';
@@ -19,7 +22,7 @@ app.use(cors({
 const server = http.createServer(app);
 const io = new Server(server, {
     cors: {
-        origin: allowedOrigins,
+        origin: allowedOrigins.length ? allowedOrigins : false,
         methods: ["GET", "POST"],
         credentials: true,
     },
@@ -147,18 +150,19 @@ io.on('connection', (socket) => {
 
 // call user service
 const getIndividualUser = async (id) => {
-    const response = await fetch(`http://user-service:5001/api/users/getIndividualUser/${id}`);
+    const response = await fetch(`http://user-service:5001/user/getIndividualUser/${id}`);
     if (!response.ok) throw new Error("Service call failed");
     return response.json();
 };
 
-app.use('/api/chats', router);
+app.use('/chat', router);
 
 app.use((err, req, res, next) => {
     console.error('Unhandled error:', err);
     res.status(500).json({ success: false, message: 'Internal server error' });
 });
 
-server.listen(5000, function () {
-    console.log("app is listing on 5000");
+const port = process.env.PORT || process.env.port || 5000;
+server.listen(port, function () {
+    console.log(`app is listening on ${port}`);
 })

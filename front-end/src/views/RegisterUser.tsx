@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
+import { apiUrl } from '../config/apiBase';
 
 const RegisterUserView = () => {
     const [name, setName] = useState<string>("");
@@ -11,7 +12,7 @@ const RegisterUserView = () => {
     const registerUser = async (e: any) => {
         e.preventDefault();
         try {
-            const response = await fetch("/api/auth/register", {
+            const response = await fetch(apiUrl("/auth/register"), {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',

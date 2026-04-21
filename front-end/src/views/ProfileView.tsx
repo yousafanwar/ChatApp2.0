@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import toast from 'react-hot-toast';
 import UseProfile from "../hooks/UseProfile";
+import { apiUrl } from "../config/apiBase";
 
 const ProfileView = () => {
 
@@ -37,7 +38,7 @@ const ProfileView = () => {
 
   const updateUser = async () => {
     try {
-      const response = await fetch(`/api/users/updateUser/${userData.profile?._id}`, {
+      const response = await fetch(apiUrl(`/user/updateUser/${userData.profile?._id}`), {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -66,7 +67,7 @@ const ProfileView = () => {
 
   const getUpdatedUser = async () => {
     try {
-      const response = await fetch(`/api/users/getIndividualUser/${userData.profile?._id}`, {
+      const response = await fetch(apiUrl(`/user/getIndividualUser/${userData.profile?._id}`), {
         headers: {
           authorization: `Bearer ${userData.profile?.token}`
         }

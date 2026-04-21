@@ -6,7 +6,7 @@ const authenticateUser = async (req, res, next) => {
     if (!token) {
         return res.status(401).json({ error: "Token not provided" });
     }
-    const response = await fetch('http://auth-service:5002/api/auth/authenticate', {
+    const response = await fetch('http://auth-service:5002/auth/authenticate', {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json'

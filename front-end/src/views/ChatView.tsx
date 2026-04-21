@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import toast from 'react-hot-toast';
 import ContactsTab from '../components/ContactsTab';
 import UseProfile from '../hooks/UseProfile';
+import { apiUrl } from '../config/apiBase';
 import { Dialog, DialogBackdrop, DialogPanel, DialogTitle } from '@headlessui/react';
 import { PlusIcon, ArrowLeftIcon, XMarkIcon } from '@heroicons/react/24/solid';
 import socket from '../hooks/UseSocket';
@@ -143,7 +144,7 @@ const ChatView = () => {
   const fetchAllGroupMembers = async () => {
     if (selectedContactData.groupId) {
       try {
-        const response = await fetch(`/api/users/getAllGroupMembers/${profile.profile?._id}`, {
+        const response = await fetch(apiUrl(`/user/getAllGroupMembers/${profile.profile?._id}`), {
           headers: {
             authorization: `Bearer ${profile.profile?.token}`
           }

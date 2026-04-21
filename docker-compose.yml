@@ -2,57 +2,70 @@ version: '3.8'
 
 services:
   frontend:
-    build: 
+    build:
       context: ./front-end
-    ports:
-      - "5173:5173"
+      args:
+        VITE_API_BASE_URL: http://yousaf.ddns.net/api
+    expose:
+      - "5173"
     networks:
       - chat-network
+      - npm_network
 
   chat-service:
-    build: 
+    build:
       context: "./chat-service"
-    ports:
-      - "5000:5000"
+    expose:
+      - "5000"
+    environment:
+      - PORT=5000
+      - ALLOWED_ORIGINS=http://yousaf.ddns.net
     depends_on:
       - mongo
     networks:
       - chat-network
+      - npm_network
 
   mongo:
     image: mongo:6
-    ports:
-      - "27017:27017"
     volumes:
       - mongo-data:/data/db
     networks:
       - chat-network
-    hostname: "mongo"
+    hostname: mongo
 
   user-service:
-    build: 
+    build:
       context: "./user-service"
-    ports:
-      - "5001:5001"
+    expose:
+      - "5001"
+    environment:
+      - PORT=5001
+      - ALLOWED_ORIGINS=http://yousaf.ddns.net
     depends_on:
       - mongo
     networks:
       - chat-network
+      - npm_network
 
   auth-service:
     build:
       context: "./auth-service"
-    ports:
-      - "5002:5002"
+    expose:
+      - "5002"
     environment:
       - PORT=5002
+      - ALLOWED_ORIGINS=http://yousaf.ddns.net
     depends_on:
       - mongo
     networks:
       - chat-network
+      - npm_network
 
 volumes:
   mongo-data:
 
 networks:
   chat-network:
+  npm_network:
+    external: true

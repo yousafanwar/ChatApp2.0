@@ -1,6 +1,7 @@
 import { useContext, useEffect } from "react";
 import { ProfileContext } from "../context/ProfileProvider";
 import type { Profile, ProfileContextInterface } from "../context/ProfileProvider";
+import { apiUrl } from "../config/apiBase";
 
 const UseProfile = () => {
 
@@ -19,7 +20,7 @@ const UseProfile = () => {
                     const parsedProfile: Profile | undefined = JSON.parse(user);
                     if (parsedProfile?.token) {
                         // Validate token
-                        fetch("/api/auth/authenticate", {
+                        fetch(apiUrl("/auth/authenticate"), {
                             method: "POST",
                             headers: {
                                 "Content-Type": "application/json",

@@ -9,15 +9,18 @@ dotenv.config();
 const app = express();
 
 app.use(express.json());
-const allowedOrigins = process.env.ALLOWED_ORIGINS?.split(',') || true;
+const allowedOrigins = (process.env.ALLOWED_ORIGINS ?? '')
+  .split(',')
+  .map((o) => o.trim())
+  .filter(Boolean);
 app.use(cors({
-  origin: allowedOrigins,
+  origin: allowedOrigins.length ? allowedOrigins : false,
   credentials: true
 }));
 app.use(bodyParser.json({ limit: '50mb' }));
 app.use(bodyParser.urlencoded({ limit: '50mb', extended: true }));
 
-app.use('/api/auth', router);
+app.use('/auth', router);
 
 app.use((err, req, res, next) => {
     console.error('Unhandled error:', err);

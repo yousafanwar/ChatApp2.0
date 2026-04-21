@@ -3,6 +3,7 @@ import type { PropsWithChildren } from "react";
 import toast from 'react-hot-toast';
 import UseProfile from "../hooks/UseProfile";
 import authenticationFailed from "../helperFunctions";
+import { apiUrl } from "../config/apiBase";
 
 export const UserContactsContext = createContext<IContact[]>([]);
 
@@ -26,7 +27,7 @@ const UserContactsProvider = ({ children }: PropsWithChildren) => {
         const fetchUserContacts = async () => {
             if (userData.profile?._id) {
                 try {
-                    const response = await fetch(`/api/users/getMyContacts/${userData.profile?._id}`, {
+                    const response = await fetch(apiUrl(`/user/getMyContacts/${userData.profile?._id}`), {
                         headers: {
                             authorization: `Bearer ${userData.profile?.token}`
                         }
@@ -53,7 +54,7 @@ const UserContactsProvider = ({ children }: PropsWithChildren) => {
     const renderAllGroups = async () => {
         if (userData) {
             try {
-                const response = await fetch(`/api/users/getGroups/${userData.profile?._id}`, {
+                const response = await fetch(apiUrl(`/user/getGroups/${userData.profile?._id}`), {
                     headers: {
                         authorization: `Bearer ${userData.profile?.token}`
                     }

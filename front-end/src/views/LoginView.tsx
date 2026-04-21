@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import useProfile from "../hooks/UseProfile";
+import { apiUrl } from "../config/apiBase";
 import "../globals.css";
 
 const LoginView = () => {
@@ -15,7 +16,7 @@ const LoginView = () => {
   const handleLogin = async (e: any) => {
     e.preventDefault();
     try {
-      const response = await fetch("/api/auth/login", {
+      const response = await fetch(apiUrl("/auth/login"), {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

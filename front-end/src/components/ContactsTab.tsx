@@ -2,6 +2,7 @@ import React from "react";
 import { useState, useEffect } from 'react';
 import toast from 'react-hot-toast';
 import UseProfile from '../hooks/UseProfile';
+import { apiUrl } from '../config/apiBase';
 import UserContacts from '../hooks/UserContacts';
 import { Dialog, DialogPanel, DialogTitle } from '@headlessui/react';
 import ProfileView from '../views/ProfileView';
@@ -61,7 +62,7 @@ const ContactsTab = (props: any) => {
 
     if (userData.profile && userData.profile.token)
       try {
-        const response = await fetch(`/api/users/getAllUsers/${userData.profile._id}`, {
+        const response = await fetch(apiUrl(`/user/getAllUsers/${userData.profile._id}`), {
           headers: {
             authorization: `Bearer ${userData.profile.token}`
           }
@@ -89,7 +90,7 @@ const ContactsTab = (props: any) => {
       _id: e._id,
     }
     try {
-      const response = await fetch("/api/users/addToMyContactList", {
+      const response = await fetch(apiUrl("/user/addToMyContactList"), {
         method: "POST",
         headers: {
           'Content-Type': 'application/json',
@@ -120,7 +121,7 @@ const ContactsTab = (props: any) => {
     }
 
     try {
-      const response = await fetch("/api/users/createGroup", {
+      const response = await fetch(apiUrl("/user/createGroup"), {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
