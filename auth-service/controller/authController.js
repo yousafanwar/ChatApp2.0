@@ -5,7 +5,14 @@ dotenv.config();
 
 const authenticateUser = async (req, res) => {
     try {
-        const { token } = req.body;
+        const tokenFromBody = req.body?.token;
+        const tokenFromHeader = req.headers.authorization?.split(" ")[1];
+        const token = tokenFromBody || tokenFromHeader;
+
+        if (!token) {
+            return res.status(401).json({ success: false, message: "Token is required" });
+        }
+
         const result = await authService.verifyJWT(token);
         if (result.success) {
             res.status(result.status).json({ success: true, message: result.message });
@@ -33,6 +40,38 @@ const loginUser = async (req, res) => {
     }
 };
 
+const refreshToken = async (req, res) => {
+    try {
+        const { refreshToken } = req.body;
+        const result = await authService.refreshUserToken(refreshToken);
+
+        if (result.success) {
+            res.status(result.status).json({ success: true, message: result.message, payload: result.payload });
+        } else {
+            res.status(result.status).json({ success: false, message: result.message });
+        }
+    } catch (err) {
+        console.error("Refresh token error:", err);
+        res.status(500).json({ success: false, message: "Internal server error" });
+    }
+};
+
+const logoutUser = async (req, res) => {
+    try {
+        const { refreshToken } = req.body;
+        const result = await authService.logout(refreshToken);
+
+        if (result.success) {
+            res.status(result.status).json({ success: true, message: result.message });
+        } else {
+            res.status(result.status).json({ success: false, message: result.message });
+        }
+    } catch (err) {
+        console.error("Logout error:", err);
+        res.status(500).json({ success: false, message: "Internal server error" });
+    }
+};
+
 const registerNewUser = async (req, res) => {
     try {
         const { name, email, password } = req.body;
@@ -51,7 +90,9 @@ const registerNewUser = async (req, res) => {
 const authController = {
     authenticateUser,
     loginUser,
-    registerNewUser
+    registerNewUser,
+    refreshToken,
+    logoutUser
 };
 
 export default authController;

@@ -9,6 +9,7 @@ export interface Profile {
     avatar: string
     timeStamp: string
     token: string
+    refreshToken?: string
 };
 
 export interface ProfileContextInterface {

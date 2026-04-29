@@ -30,6 +30,10 @@ const userSchema = new mongoose.Schema({
         name: String,
         size: Number
     },
+    refreshToken: {
+        type: String,
+        default: null
+    },
     timeStamp: { type: Date, default: Date.now }
 });
 

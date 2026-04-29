@@ -74,7 +74,11 @@ const ProfileView = () => {
       });
       const result = await response.json();
       if (result.success) {
-        userData.setProfile(result.payload);
+        userData.setProfile({
+          ...result.payload,
+          token: userData.profile?.token || "",
+          refreshToken: userData.profile?.refreshToken
+        });
       } else {
         toast.error(result.message || "Failed to refresh profile");
       }
