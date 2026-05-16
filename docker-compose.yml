@@ -5,26 +5,50 @@ services:
     build:
       context: ./front-end
       args:
-        VITE_API_BASE_URL: http://yousaf.ddns.net/api
-    expose:
-      - "5173"
+        VITE_API_BASE_URL: https://chat.aytraders.com/api
+    ports:
+      - "3001:5173"       # expose to host so NPM can reach it
     networks:
       - chat-network
-      - npm_network
 
   chat-service:
     build:
-      context: "./chat-service"
+      context: ./chat-service
     expose:
-      - "5000"
+      - "5000"            # internal only, no host port needed
     environment:
       - PORT=5000
-      - ALLOWED_ORIGINS=http://yousaf.ddns.net
+      - ALLOWED_ORIGINS=https://chat.aytraders.com
     depends_on:
       - mongo
     networks:
       - chat-network
-      - npm_network
+
+  user-service:
+    build:
+      context: ./user-service
+    expose:
+      - "5001"
+    environment:
+      - PORT=5001
+      - ALLOWED_ORIGINS=https://chat.aytraders.com
+    depends_on:
+      - mongo
+    networks:
+      - chat-network
+
+  auth-service:
+    build:
+      context: ./auth-service
+    expose:
+      - "5002"
+    environment:
+      - PORT=5002
+      - ALLOWED_ORIGINS=https://chat.aytraders.com
+    depends_on:
+      - mongo
+    networks:
+      - chat-network
 
   mongo:
     image: mongo:6
@@ -32,40 +56,9 @@ services:
       - mongo-data:/data/db
     networks:
       - chat-network
-    hostname: mongo
-
-  user-service:
-    build:
-      context: "./user-service"
-    expose:
-      - "5001"
-    environment:
-      - PORT=5001
-      - ALLOWED_ORIGINS=http://yousaf.ddns.net
-    depends_on:
-      - mongo
-    networks:
-      - chat-network
-      - npm_network
-
-  auth-service:
-    build:
-      context: "./auth-service"
-    expose:
-      - "5002"
-    environment:
-      - PORT=5002
-      - ALLOWED_ORIGINS=http://yousaf.ddns.net
-    depends_on:
-      - mongo
-    networks:
-      - chat-network
-      - npm_network
 
 volumes:
   mongo-data:
 
 networks:
-  chat-network:
-  npm_network:
-    external: true
+  chat-network:             # simple internal network, no external needed
